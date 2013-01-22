@@ -1,0 +1,50 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
+<head>
+	<title></title>
+	<meta http-equiv="Content-Type" content="text/html;charset=UTF-8" />
+	<link rel="stylesheet" type="text/css" href="css/reset.css" media="all" />
+	<link rel="stylesheet" type="text/css" href="css/toolbar.css" media="all" />
+	<script type="text/javascript" src="/ysl/trunk/build/ysl.min.js"></script>
+	<style type="text/css">
+		body{background-color:#f5f5f5; padding:10px;}
+		#kfceditor-container {border-top-color:#aaa; height:300px; width:100%; overflow:auto; border:1px solid gray;}
+	</style>
+</head>
+<body>
+	<ul class="kfceditor-toolbar" id="kfceditor-toolbar01">
+		<li><span class="kfceditor-icon"><span class="kfceditor-icon-save">保存</span></span></li>
+		<li><span class="kfceditor-icon"><span class="kfceditor-icon-undo">撤销</span></span></li>
+		<li><span class="kfceditor-icon"><span class="kfceditor-icon-redo">撤销</span></span></li>
+		<li><span class="kfceditor-icon"><span class="kfceditor-icon-font">选择字体</span></span></li>
+		<li><span class="kfceditor-icon"><span class="kfceditor-icon-fontsize">字号</span></span></li>
+		<li>
+			<span class="kfceditor-icon"><span class="kfceditor-icon-bold">粗体</span></span>
+			<span class="kfceditor-icon"><span class="kfceditor-icon-italia">斜体</span></span>
+			<span class="kfceditor-icon"><span class="kfceditor-icon-underline">下划线</span></span>
+		</li>
+		<li><span class="kfceditor-icon"><span class="kfceditor-icon-forecolor">字体颜色</span></span></li>
+		<li>
+			<span class="kfceditor-icon"><span class="kfceditor-icon-alignleft">左对齐</span></span>
+			<span class="kfceditor-icon"><span class="kfceditor-icon-aligncenter">居中</span></span>
+			<span class="kfceditor-icon"><span class="kfceditor-icon-alignright">右对齐</span></span>
+			<span class="kfceditor-icon"><span class="kfceditor-icon-aligndefault">默认对齐</span></span>
+		</li>
+		<li><span class="kfceditor-icon"><span class="kfceditor-icon-smile">表情</span></span></li>
+		<li><span class="kfceditor-icon"><span class="kfceditor-icon-pic">图片</span></span></li>
+		<li><span class="kfceditor-icon"><span class="kfceditor-icon-movie">视频</span></span></li>
+		<li><span class="kfceditor-icon"><span class="kfceditor-icon-music">音乐</span></span></li>
+		<li><span class="kfceditor-icon"><span class="kfceditor-icon-link">链接</span></span></li>
+		<li>高级功能</li>
+		<li><span class="kfceditor-icon"><span class="kfceditor-icon-eraser">清除格式</span></span></li>
+	</ul>
+
+	<div id="ed"></div>
+
+<script type="text/javascript">
+(function(Y){
+	Y.dom.one('#ed');
+})(YSL);
+</script>
+</body>
+</html>

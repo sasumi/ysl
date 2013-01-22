@@ -1,0 +1,39 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>Insert title here</title>
+<link rel="stylesheet" type="text/css" href="global.css" media="all" />
+	<script type="text/javascript" src="../source/ysl.base.js"></script>
+</head>
+<body style="background-color:white; padding:10px; background:#333; color:yellow">
+	分页demo:
+	<div id="con"></div>
+	<script type="text/javascript">
+		var data = [
+			'asdfasdf',
+			'asdfasdf',
+			'asdfasdf',
+			'asdfasdf',
+			'asdfasdf',
+			'asdfasdf',
+			'asdfasdf',
+			'asdfasdf',
+			'asdfasdf',
+			'asdfasdf',
+			'asdfasdf',
+			'asdfasdf',
+			'asdfasdf',
+			'asdfasdf',
+			'asdfasdf',
+			'asdfasdf',
+			'asdfasdf'
+		];
+
+		YSL.use('widget.Pagination', function(Y){
+			var p = new YSL.widget.Pagination({itemTotal:data.length, pageSize:2,container:'#con'});
+			p.show();
+		});
+	</script>
+</body>
+</html>

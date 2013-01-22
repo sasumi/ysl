@@ -1,0 +1,18 @@
+﻿html,p,body {margin:0; padding:0;}
+.none {display:none;}
+
+.popup_con {font-size:12px; background-color:white; overflow:hidden;}
+.popup_con select {border-style-type:solid;padding:0; margin:0;}
+.new_tab_con { margin:5px;}
+.new_tab_con ul {height:22px; list-style-type:none; margin:0 5px; padding:0;border-bottom:1px solid #cdcdcd;}
+.new_tab_con li {float:left; width:80px; margin:0 5px;height:20px; }
+.new_tab_con li a {display:block;width:80px; height:22px; text-align:center; text-decoration:none; color:black; margin-top:1px; line-height:20px;border:1px solid #cdcdcd; border-bottom:none;}
+.new_tab_con .sel {background-color:white;border:1px solid #cdcdcd;border-bottom:none; border-top:2px solid #cdcdcd; font-weight:700;height:22px; margin-top:-1px;}
+.popup_content_con {height: 300px;}
+.tab_content_con .t_txt{margin:5px 10px; font-weight:700; line-height:30px; color:#2B6FB6;}
+.tab_content_con .c_txt{margin:0 10px; }
+.tab_content_con .c_txt textarea {width:99%; height:240px; overflow:auto;}
+.iframecon {width:95%; height:245px; overflow:hidden; border:1px solid #ccc; margin:0 auto;}
+
+.popup_con .save_btn {text-align:right;}
+.popup_con .save_btn button {border:1px solid gray; margin:0 10px;}

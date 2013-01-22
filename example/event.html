@@ -1,0 +1,42 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
+<head>
+	<meta http-equiv="Content-Type" content="text/html;charset=UTF-8" />
+	<title></title>
+	<link rel="stylesheet" type="text/css" href="global.css" media="all" />
+	<script type="text/javascript" src="../source/ysl.base.js"></script>
+	<style type="text/css">
+		body {background-color:white; color:black}
+		li {list-style:circle inside; padding:3px 0}
+		h1, h2, h3, h4 {text-transform: uppercase; margin:0.5em 0 0.5em 0; text-shadow:2px 2px black}
+		h1 {font-size:24px; border-bottom:1px dashed #555; padding-bottom:0.5em}
+		h2 {font-size:18px;}
+	</style>
+</head>
+<body>
+	<textarea name="" id="tx" cols="30" rows="10"></textarea>
+	<ul>
+		<li id="id1"><span>asd1</span></li>
+		<li id="id2"><span>asd2</span></li>
+		<li id="id3"><span>asd3</span></li>
+		<li id="id4"><span>asd4</span></li>
+		<li id="id5"><span>asd5</span></li>
+		<li id="id6"><span>asd6</span></li>
+		<li id="id7"><span>asd7</span></li>
+		<li id="id8"><span>asd8</span></li>
+		<li id="id9"><span>asd9</span></li>
+		<li id="id10"><span>asd10</span></li>
+	</ul>
+
+	<script type="text/javascript">
+		(function(Y){
+			Y.dom.one('#tx').on('keydown', function(e){
+				console.log('e ',e.keyCode)
+			});
+			Y.dom.delegate('span', 'click', function(ev){
+				console.log(this.parentNode.id);
+			});
+		})(YSL);
+	</script>
+</body>
+</html>

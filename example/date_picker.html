@@ -1,0 +1,102 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>Insert title here</title>
+<link rel="stylesheet" type="text/css" href="reset.css" media="all"/>
+<script type="text/javascript" src="../source/ysl.base.js"></script>
+</head>
+<body style="background-color:white">
+<style>/*
+.datepicker {width:176px; border:1px solid #ccc; overflow:hidden; background-color:white; position:absolute; font-family:Tahoma}
+.datepicker  select {border:none; vertical-align:top}
+.datepicker .prev_month_btn {display:block; float:left; width:0; height:0; border:7px solid white; border-right-color:gray; overflow:hidden; margin-top:3px;}
+.datepicker .next_month_btn {display:block; float:right; width:0; height:0; border:6px solid white; border-left-color:gray; overflow:hidden; margin-top:-17px;}
+.datepicker_pointer {position:absolute;}
+.datepicker_hd {text-align:center; clean:both; height:22px; overflow:hidden; color:#555756}
+.datepicker_hd h4 {text-indent:-20px;}
+.datepicker_hd h4 a{color:#555756; font-size:14px;}
+
+.datepicker_daylist {heigth:25px; overflow:hidden; clear:both; background-color:#eee;}
+.datepicker_daylist li {float:left; width:25px; heigth:25px; text-align:center}
+
+.datepicker_datelist {width:175px; border-top:1px solid #ddd; border-left:1px solid #ddd; float:right;}
+.datepicker_datelist li {float:left; width:25px; heigth:23px; overflow:hidden; text-align:center}
+.datepicker_datelist .today a {background-color:#b6deeb}
+.datepicker_datelist .init_date a {background-color:#369; color:white;}
+.datepicker_datelist .last_month_date a,
+.datepicker_datelist .next_month_date a {color:#ccc}
+.datepicker_datelist a {font-weight:bold; color:gray; border-right:1px solid #ddd; border-bottom:1px solid #ddd; line-height:21px; overflow:hidden; display:block; text-decoration:none}
+.datepicker_datelist a:hover {background-color:#ddd}
+
+.datepicker_weeklist {float:left; width:24px; line-height:21px; display: block; overflow:hidden; border-bottom:1px solid #ddd;}
+.datepicker_weeklist li {text-align:center; border-top:1px solid #ddd; color:#ddd}
+
+.datepicker .last_month_date {color:#ddd}
+.datepicker .next_month_date {color:#ddd}
+*/
+
+.datepicker {width:220px; border:1px solid #ccc; overflow:hidden; background-color:black; position:absolute; font-family:Tahoma}
+.datepicker  select {border:none; vertical-align:top}
+.datepicker .prev_month_btn {display:block; float:left; width:0; height:0; border:7px solid white; border-right-color:gray; overflow:hidden; margin-top:3px;}
+.datepicker .next_month_btn {display:block; float:right; width:0; height:0; border:6px solid white; border-left-color:gray; overflow:hidden; margin-top:-17px;}
+.datepicker_pointer {position:absolute;}
+.datepicker_hd {text-align:center; clean:both; height:22px; overflow:hidden; color:#555756}
+.datepicker_hd h4 {text-indent:-20px; border-bottom:2px solid gray}
+.datepicker_hd h4 a{color:#555756; font-size:14px;}
+
+.datepicker_daylist {heigth:25px; overflow:hidden; clear:both;}
+.datepicker_daylist li {float:left; width:25px; heigth:25px; text-align:center}
+
+.datepicker_datelist {width:175px; border-top:1px solid #ddd;float:right;}
+.datepicker_datelist li {float:left; width:25px; heigth:23px; overflow:hidden; text-align:center}
+.datepicker_datelist .today a {background-color:#b6deeb}
+.datepicker_datelist .init_date a {background-color:#369; color:white;}
+.datepicker_datelist .last_month_date a,
+.datepicker_datelist .next_month_date a {color:#ccc}
+.datepicker_datelist a {font-weight:bold; color:gray; border-right:1px solid #ddd; border-bottom:1px solid #ddd; line-height:21px; overflow:hidden; display:block; text-decoration:none}
+.datepicker_datelist a:hover {background-color:#ddd}
+
+.datepicker_weeklist {float:left; width:24px; line-height:21px; display: block; overflow:hidden; border-bottom:1px solid #ddd;}
+.datepicker_weeklist li {text-align:center; border-top:1px solid #ddd; color:#ddd}
+
+.datepicker .last_month_date {color:#ddd}
+.datepicker .next_month_date {color:#ddd}
+</style>
+<div id="datepicker_01" class="datepicker" style="display:none">
+	<div class="datepicker_hd">
+		<a href="javascript:;" class="prev_month_btn" rel="prev-month">&lt;&lt;</a>
+		<h4>
+				<select name="" rel="year-selector"></select> -
+				<select rel="month-selector">
+					<option value="1">1</option>
+					<option value="2">2</option>
+					<option value="3">3</option>
+					<option value="4">4</option>
+					<option value="5">5</option>
+					<option value="6">6</option>
+					<option value="7">7</option>
+					<option value="8">8</option>
+					<option value="9">9</option>
+					<option value="10">10</option>
+					<option value="11">11</option>
+					<option value="12">12</option>
+				</select>
+		</h4>
+		<a href="javascript:;" class="next_month_btn" rel="next-month">&gt;&gt;</a>
+	</div>
+	<div class="datepicker_bd">
+		<ul class="datepicker_daylist"></ul>
+		<ul class="datepicker_datelist"></ul>
+		<ul class="datepicker_weeklist" style="display:none"></ul>
+		<div class="datepicker_timepicker"></div>
+	</div>
+</div>
+<form action="" style="margin:100px;">
+	<input type="text" name="" id=""/>
+	<input type="submit" value="submit"/>
+</form>
+<script type="text/javascript">
+</script>
+</body>
+</html>

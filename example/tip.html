@@ -1,0 +1,29 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
+<head>
+	<meta http-equiv="Content-Type" content="text/html;charset=UTF-8" />
+	<title>tip</title>
+	<script type="text/javascript" src="../source/ysl.base.js"></script>
+	<link rel="stylesheet" type="text/css" href="tip.css" media="all" />
+</head>
+<body>
+	<input type="button" value="tip1" id="tip1" />
+	<input type="button" value="tip2" id="tip2" />
+	<input type="button" value="tip3" id="tip3" />
+	<script type="text/javascript">
+		YSL.use('widget.Tip', function(Y){
+
+			Y.dom.all('input').on('click', function(){
+				var tipHash = {
+					1: 'info',
+					2: 'succ',
+					3: 'err'
+				};
+				var idx = this.getDomNode().id.replace(/tip/,'');
+				var tip = new Y.widget.Tip('tip demo效果'+idx, tipHash[idx], 100);
+				tip.show();
+			})
+		});
+	</script>
+</body>
+</html>

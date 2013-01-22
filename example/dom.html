@@ -1,0 +1,54 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
+<head>
+	<meta http-equiv="Content-Type" content="text/html;charset=UTF-8" />
+	<title></title>
+	<link rel="stylesheet" type="text/css" href="global.css" media="all" />
+	<script type="text/javascript" src="../source/ysl.base.js"></script>
+	<style type="text/css">
+		body {background-color:white; color:black}
+		li {list-style:circle inside; padding:3px 0}
+		h1, h2, h3, h4 {text-transform: uppercase; margin:0.5em 0 0.5em 0; text-shadow:2px 2px black}
+		h1 {font-size:24px; border-bottom:1px dashed #555; padding-bottom:0.5em}
+		h2 {font-size:18px;}
+	</style>
+</head>
+<body>
+	<div id="test">
+		<ul>
+			<li>hello1
+			</li>
+			<li>hello2
+			</li>
+			<li>hello3
+			</li>
+			<li>hello4
+			</li>
+			<li>hello5
+			</li>
+		</ul>
+	</div>
+
+	<div>
+		<p><input type="text" name="" id="a1" /></p>
+		<p><input type="text" name="" id="a2" /></p>
+		<p><input type="text" name="" id="a3" /></p>
+	</div>
+
+	<script type="text/javascript">
+		(function(Y){
+			console.log(Y.dom.one('li').getHtml());
+			Y.dom.all('ul>li').setStyle('fontWeight', 'bolder');
+
+			var col = Y.dom.all('div input').toArray();
+			console.log(col);
+
+			var inputs = Y.dom.all('input');
+			inputs.setStyle({color: 'red', marginTop:'10px', padding:'5px', width:'200px'});
+			inputs.on('click', function(){
+				alert(this.getAttr('id'));
+			});
+		})(YSL);
+	</script>
+</body>
+</html>

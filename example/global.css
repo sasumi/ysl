@@ -1,0 +1,32 @@
+/** reset **/
+body,div,dl,dt,dd,ul,ol,li,h1,h2,h3,h4,h5,h6,pre,form,fieldset,input,textarea,p,blockquote,th,td{margin:0;padding:0}
+body{font-family:SimSun,Tahoma,Lucida Grande;font-size:12px;line-height:20px}
+table{border-collapse:collapse;border-spacing:0}
+fieldset,img{border:0}
+ol,ul,li{list-style:none}
+label,input,select{vertical-align:middle}
+q:before,q:after{content:''}
+.l{float:left}
+.r{float:right}
+.clear{clear:both;overflow:hidden}
+.clear-c:after{content:".";display:block;height:0;clear:both;visibility:hidden}
+.clear-c{zoom:1;display:block}
+.hide{display:none}
+.hide.current{display:block}
+.center {text-align:center}
+
+
+body {padding: 0 20px; font-size:14px; font-family:"微软雅黑"; background-color:#272822; color:#ddd}
+a {color:#a6e22e}
+
+.frm {margin-bottom:10px;}
+.frm fieldset {padding:10px; border:none}
+.frm legend {font-size:16px; font-weight:bold; margin:5px 0 -5px 0 !important; margin:0 0 0 -4px; display:none;}
+.frm dl {padding:3px;}
+.frm dt {float:left; padding:7px 0 0; width:120px; text-align:right;}
+.frm dd {padding:3px; margin-left:130px}
+.frm span.tip {color:#aaa; margin-left:0.5em}
+.frm span.warn {color:red; margin-left:0.5em; padding-left:18px; background:url("../img/warn.gif") no-repeat left center; }
+.frm span.required_star {color:red; font-weight:bold; font-size:18px; padding:0 5px; vertical-align:middle;}
+.srch-frm {float:right; margin:-32px 10px 0 10px;}
+.srch-frm input.btn {padding:0 5px;}
