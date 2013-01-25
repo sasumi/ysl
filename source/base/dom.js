@@ -25,7 +25,7 @@
 	 * @param {string} rules
 	 * @param {string} styleSheetID
 	 * @return {DOM Element}
-	 * @description Y.dom.insertStyleSheet('* {margin:0;}');
+	 * @deprecate Y.dom.insertStyleSheet('* {margin:0;}');
 	 */
 	Y.dom.insertStyleSheet = function (rules, styleSheetID) {
 		styleSheetID = styleSheetID || 'css_'+Math.random();
