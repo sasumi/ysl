@@ -345,7 +345,7 @@
 		 * @return {Boolean}
 		 */
 		var forceLoadScript = function(fileInfo, sucCb){
-			var option = Y.lang.extend(true, {
+			var option = Y.object.extend(true, {
 				src: null,			//文件src
 				charset: 'utf-8',	//文件编码
 				'window': window
@@ -401,11 +401,7 @@
 			}
 			batchLoadScript(list, callback);
 		};
-
-
-		Y.net.ScriptLoader = ScriptLoader;
-		var _scl = new ScriptLoader();
-		Y.net.loadScript = _scl.load;
+		Y.net.loadScript = loadScript;
 	})(Y.net);
 
 	/**

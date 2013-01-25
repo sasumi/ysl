@@ -99,50 +99,71 @@
 	 * 子模块加载
 	 * 依赖net组件
 	 * @param {String} module 模块名称，支持Y.string 或 YSL.string 或 Y.widget.popup形式
-	 * @param {Function} moduleListStr
-	 * @param {Object} option
+	 * @param {Function} modList
 	 **/
 	Y.use = (function(){
-		var DEF_SL;
-		return function(moduleListStr, callback, option){
-			callback = callback || Y.emptyFn;
-			if(!Y.net){
-				throw('NET MODULE REQUIRED');
-			}
+		var NeedLoadList = [];
+		var CallbackList = [];
+		var ABS_PATH = Y.ENV.getAbsUrl();
 
-			if(!DEF_SL){
-				DEF_SL = new Y.net.ScriptLoader();
-			}
-
-			var moduleList = [],
-				tmpList = moduleListStr.split(',');
-			for(var i=0; i<tmpList.length; i++){
-				if(Y.string.trim(tmpList[i])){
-					moduleList.push(Y.string.trim(tmpList[i]).replace(/^Y\.|^YSL\./i, ''));
+		var updateCallback = function(){
+			var tmp = [];
+			for(var i=0; i<CallbackList.length; i++){
+				var allLoaded = true;
+				for(var j=0; j<CallbackList[i].modList.length; j++){
+					if(!Y.object.route(Y, CallbackList[i].modList[j])){
+						allLoaded = false;
+						break;
+					}
 				}
-			}
-
-			var doneCount = 0;
-			var doneCheck = function(){
-				if(doneCount == moduleList.length){
-					callback(Y);
-				}
-			};
-
-			Y.lang.each(moduleList, function(module){
-				if(Y.object.route(Y, module)){
-					doneCount++;
-					doneCheck(Y);
+				if(allLoaded){
+					CallbackList[i].fn(Y)
 				} else {
-					var fileName = module.replace(/\./g, '/').toLowerCase() + '.js';
-					var path = Y.ENV.getAbsUrl()+fileName;
-					DEF_SL.add(path, option);
-					DEF_SL.loadQueue(function(){
-						doneCount++;
-						doneCheck(Y);
-					});
+					tmp.push(CallbackList[i]);
+				}
+			}
+			CallbackList = tmp;
+		};		
+
+		var loadList = function(){
+			debugger;
+			var s = NeedLoadList.join('|');
+			console.log('要加载 ', s);
+
+			Y.net.loadScript(NeedLoadList, function(){
+				debugger;
+				updateCallback();
+				console.log('加载成功 ', s);
+				setTimeout(function(){
+					debugger;
+					if(NeedLoadList.length){
+						loadList();
+					}
+				}, 0);
+			});
+			NeedLoadList = [];
+		};
+
+		return function(modStr, callback){
+			callback = callback || Y.emptyFn;
+
+			var modList = [];
+			Y.lang.each(modStr.split(','), function(str){
+				var str = Y.string.trim(str);
+				if(str){
+					var na = str.replace(/^Y\.|^YSL\./i, '');
+					if(!Y.object.route(Y, na)){
+						modList.push(na);
+						NeedLoadList.push(ABS_PATH+na.replace(/\./g,'/').toLowerCase()+'.js');
+					}
 				}
 			});
+			if(modList.length){
+				CallbackList.push({fn:callback, modList: modList});
+				loadList();
+			} else {
+				callback(Y);
+			}
 		};
 	})();
 

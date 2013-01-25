@@ -128,5 +128,7 @@ YSL.use('widget.Tween', function(Y){
 		}
 	};
 
+	console.log('Y.widget.Animate', Animate);
+
 	Y.widget.Animate = Animate;
 });

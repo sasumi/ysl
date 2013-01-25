@@ -99,50 +99,71 @@
 	 * 子模块加载
 	 * 依赖net组件
 	 * @param {String} module 模块名称，支持Y.string 或 YSL.string 或 Y.widget.popup形式
-	 * @param {Function} moduleListStr
-	 * @param {Object} option
+	 * @param {Function} modList
 	 **/
 	Y.use = (function(){
-		var DEF_SL;
-		return function(moduleListStr, callback, option){
-			callback = callback || Y.emptyFn;
-			if(!Y.net){
-				throw('NET MODULE REQUIRED');
-			}
+		var NeedLoadList = [];
+		var CallbackList = [];
+		var ABS_PATH = Y.ENV.getAbsUrl();
 
-			if(!DEF_SL){
-				DEF_SL = new Y.net.ScriptLoader();
-			}
-
-			var moduleList = [],
-				tmpList = moduleListStr.split(',');
-			for(var i=0; i<tmpList.length; i++){
-				if(Y.string.trim(tmpList[i])){
-					moduleList.push(Y.string.trim(tmpList[i]).replace(/^Y\.|^YSL\./i, ''));
+		var updateCallback = function(){
+			var tmp = [];
+			for(var i=0; i<CallbackList.length; i++){
+				var allLoaded = true;
+				for(var j=0; j<CallbackList[i].modList.length; j++){
+					if(!Y.object.route(Y, CallbackList[i].modList[j])){
+						allLoaded = false;
+						break;
+					}
 				}
-			}
-
-			var doneCount = 0;
-			var doneCheck = function(){
-				if(doneCount == moduleList.length){
-					callback(Y);
-				}
-			};
-
-			Y.lang.each(moduleList, function(module){
-				if(Y.object.route(Y, module)){
-					doneCount++;
-					doneCheck(Y);
+				if(allLoaded){
+					CallbackList[i].fn(Y)
 				} else {
-					var fileName = module.replace(/\./g, '/').toLowerCase() + '.js';
-					var path = Y.ENV.getAbsUrl()+fileName;
-					DEF_SL.add(path, option);
-					DEF_SL.loadQueue(function(){
-						doneCount++;
-						doneCheck(Y);
-					});
+					tmp.push(CallbackList[i]);
+				}
+			}
+			CallbackList = tmp;
+		};		
+
+		var loadList = function(){
+			debugger;
+			var s = NeedLoadList.join('|');
+			console.log('要加载 ', s);
+
+			Y.net.loadScript(NeedLoadList, function(){
+				debugger;
+				updateCallback();
+				console.log('加载成功 ', s);
+				setTimeout(function(){
+					debugger;
+					if(NeedLoadList.length){
+						loadList();
+					}
+				}, 0);
+			});
+			NeedLoadList = [];
+		};
+
+		return function(modStr, callback){
+			callback = callback || Y.emptyFn;
+
+			var modList = [];
+			Y.lang.each(modStr.split(','), function(str){
+				var str = Y.string.trim(str);
+				if(str){
+					var na = str.replace(/^Y\.|^YSL\./i, '');
+					if(!Y.object.route(Y, na)){
+						modList.push(na);
+						NeedLoadList.push(ABS_PATH+na.replace(/\./g,'/').toLowerCase()+'.js');
+					}
 				}
 			});
+			if(modList.length){
+				CallbackList.push({fn:callback, modList: modList});
+				loadList();
+			} else {
+				callback(Y);
+			}
 		};
 	})();
 
@@ -1984,106 +2005,160 @@
 	 * 加载脚本
 	 **/
 	(function(net){
-		var ScriptLoader = function(){
-			this.queue = [];
-			this.lookup = {};
-			this.callbackList = [];
-			this.leftCount = 0;
+		var LOADING = false;
+		var FILES_QUEUE = [];
+		var FILES_LOAD_MAP = {};
+
+		/**
+		 * 检测批量文件是否全部加载完成
+		 * @param  {Array} fileInfoList
+		 * @return {Boolean}
+		 */
+		var checkLoaded = function(fileInfoList){
+			var loaded = true;
+			Y.lang.each(fileInfoList, function(fileInfo){
+				if(!FILES_LOAD_MAP[fileInfo.src] ||  FILES_LOAD_MAP[fileInfo.src].status != 3){
+					loaded = false;
+					return false;
+				}
+			});
+			return loaded;
 		};
 
-		ScriptLoader.prototype = {
-			/**
-			 * 加载javascript脚本
-			 * @param {string} url
-			 * @param {function} callback
-			 * @param {object} config
-			 */
-			load: function (url, callback, conf) {
-				var sc;
-				conf = Y.object.extend({
-					cache: 1,
-					charset: 'utf-8',
-					window: Y.W
-				}, conf || {});
+		/**
+		 * 批量加载脚本
+		 * @param  {Array} fileInfoList 文件列表信息
+		 * @param  {Function} allDoneCb  全部文件加载完成回调
+		 */
+		var batchLoadScript = function(fileInfoList, allDoneCb){
+			if(checkLoaded(fileInfoList)){
+				allDoneCb();
+				return;
+			}
 
-				function done() {
-					callback && callback(url);
-					if(sc.removeNode){
-						sc.removeNode(true)
-					} else {
-						head.removeChild(sc);
-					}
-				};
-				sc = conf.window.document.createElement('script');
-				sc.setAttribute('charset', conf['charset']);
-				sc.src = url;
-				sc.onreadystatechange = sc.onload = function() {
-					if (!sc.readyState || sc.readyState == "loaded" || sc.readyState == "complete") {
-						done();
-					}
-				};
-				var head = conf.window.document.getElementsByTagName('head')[0] || conf.window.document.body
-				head.appendChild(sc);
-			},
-
-			/**
-			 * 加载队列
-			 * @param {Function} onAllDone
-			 **/
-			loadQueue: function (onAllDone) {
-				var t = this;
-				if(onAllDone){
-					this.callbackList.push(onAllDone);
+			updateListToQueue(fileInfoList, function(){
+				if(checkLoaded(fileInfoList)){
+					allDoneCb();
 				}
-				if (t.queue.length > 0) {
-					var q = t.queue.shift();
-					t.load(q.url, function () {
-						t.leftCount--;
+			});
 
-						//setTimeout去除模块多层嵌套问题
-						setTimeout(function(){
-							if(t.leftCount >0){
-								t.loadQueue();
-							} else {
-								var cb;
-								while(cb = t.callbackList.pop()){
-									cb();
-								}
-							}
-						}, 0);
-					}, q.option);
-					return;
-				}
-			},
-
-			/**
-			 * 单个添加
-			 * @param {String} url
-			 **/
-			add: function (url, option) {
-				if (this.lookup[url]){
-					return;
-				}
-				this.lookup[url] = url;
-				this.queue.push({'url':url, 'option':option});
-				this.leftCount ++;
-			},
-
-			/**
-			 * 批量添加
-			 * @param {Array} urlList
-			 **/
-			addQueue: function(urlList){
-				var _this = this;
-				Y.lang.each(urlList, function(url){
-					_this.add(url);
-				});
+			if(!LOADING){
+				loadQueue();
 			}
 		};
 
-		Y.net.ScriptLoader = ScriptLoader;
-		var _scl = new ScriptLoader();
-		Y.net.loadScript = _scl.load;
+		/**
+		 * 更新当前要加载的文件到加载队列中
+		 * @param  {Array} fileInfoList
+		 * @param {Function} 断续回调
+		 */
+		var updateListToQueue = function(fileInfoList, tickerCb){
+			Y.lang.each(fileInfoList, function(fileInfo){
+				if(FILES_LOAD_MAP[fileInfo.src]){
+					if(FILES_LOAD_MAP[fileInfo.src].status == 1 || FILES_LOAD_MAP[fileInfo.src].status == 2){
+						FILES_LOAD_MAP[fileInfo.src].callbacks.push(tickerCb);
+					} else if(FILES_LOAD_MAP[fileInfo.src].status == 3){
+						tickerCb();
+					} else if(FILES_LOAD_MAP[fileInfo.src].status == 4){
+						tickerCb(-1);
+					}
+				} else {
+					FILES_QUEUE.push(fileInfo);
+					FILES_LOAD_MAP[fileInfo.src] = {
+						status: 1,
+						callbacks: [tickerCb]
+					};
+				}
+			});
+		};
+
+		/**
+		 * 加载队列中的脚本
+		 */
+		var loadQueue = function(){
+			if(FILES_QUEUE.length){
+				LOADING = true;
+				var fileInfo = FILES_QUEUE.shift();
+				FILES_LOAD_MAP[fileInfo.src].status = 2;
+				forceLoadScript(fileInfo, function(){
+					FILES_LOAD_MAP[fileInfo.src].status = 3;
+					Y.lang.each(FILES_LOAD_MAP[fileInfo.src].callbacks, function(cb){
+						cb();
+					});
+
+					//[fix] 防止ie下面的readyState多执行一次导致这里的callback多次执行
+					FILES_LOAD_MAP[fileInfo.src].callbacks = [];
+					loadQueue();
+				});
+			} else {
+				LOADING = false;
+			}
+		};
+
+		/**
+		 * 强制加载脚本
+		 * @param  {Object|String} fileInfo 文件信息，详细配置参考函数内实现
+		 * @param  {Function} sucCb
+		 * @return {Boolean}
+		 */
+		var forceLoadScript = function(fileInfo, sucCb){
+			var option = Y.object.extend(true, {
+				src: null,			//文件src
+				charset: 'utf-8',	//文件编码
+				'window': window
+			}, fileInfo);
+
+			if(!option.src){
+				return false;
+			}
+
+			var doc = option.window.document;
+			var docMode = doc.documentMode;
+			var s = doc.createElement('script');
+			s.setAttribute('charset', option.charset);
+
+			Y.event.add(s, Y.ua.ie && Y.ua.ie < 10 ? 'readystatechange': 'load', function(){
+				if(Y.ua.ie && s.readyState != 'loaded' && s.readyState != 'complete'){
+					return;
+				}
+				setTimeout(function(){
+					sucCb();
+				}, 0);
+
+				/**
+				if(!s || Y.ua.ie && Y.ua.ie < 10 && ((typeof docMode == 'undefined' || docMode < 10) ? (s.readyState != 'loaded') : (s.readyState != 'complete'))){
+					return;
+				}
+				sucCb();
+				**/
+			});
+			s.src = option.src;
+			(doc.getElementsByTagName('head')[0] || doc.body).appendChild(s);
+		};
+
+		/**
+		 * 加载脚本
+		 * @param  {Mix}   arg1     文件信息，支持格式：str || {src:str} || [str1,str2] || [{src: str1}, {src: str2}]
+		 * @param  {Function} callback
+		 */
+		var loadScript = function(arg1, callback){
+			var list = [];
+			if(typeof(arg1) == 'string'){
+				list.push({src:arg1});
+			} else if(arg1.length){
+				Y.lang.each(arg1, function(item){
+					if(typeof(item) == 'string'){
+						list.push({src: item});
+					} else {
+						list.push(item);
+					}
+				});
+			} else {
+				list.push(arg1);
+			}
+			batchLoadScript(list, callback);
+		};
+		Y.net.loadScript = loadScript;
 	})(Y.net);
 
 	/**
@@ -2513,4 +2588,294 @@
 	}
 	Y.string = _String;
 })(YSL);
+
+(function(Y){
+	/**
+	 * Tween 算法
+	 * @param {Integer} t current time
+	 * @param {Integer} b begin value
+	 * @param {Integer} c change in value
+	 * @param {Integer} d duration
+	 */
+	var Tween = {
+	    Linear: function(t,b,c,d){ return c*t/d + b; },
+	    Quad: {
+	        easeIn: function(t,b,c,d){
+	            return c*(t/=d)*t + b;
+	        },
+	        easeOut: function(t,b,c,d){
+	            return -c *(t/=d)*(t-2) + b;
+	        },
+	        easeInOut: function(t,b,c,d){
+	            if ((t/=d/2) < 1) return c/2*t*t + b;
+	            return -c/2 * ((--t)*(t-2) - 1) + b;
+	        }
+	    },
+	    Cubic: {
+	        easeIn: function(t,b,c,d){
+	            return c*(t/=d)*t*t + b;
+	        },
+	        easeOut: function(t,b,c,d){
+	            return c*((t=t/d-1)*t*t + 1) + b;
+	        },
+	        easeInOut: function(t,b,c,d){
+	            if ((t/=d/2) < 1) return c/2*t*t*t + b;
+	            return c/2*((t-=2)*t*t + 2) + b;
+	        }
+	    },
+	    Quart: {
+	        easeIn: function(t,b,c,d){
+	            return c*(t/=d)*t*t*t + b;
+	        },
+	        easeOut: function(t,b,c,d){
+	            return -c * ((t=t/d-1)*t*t*t - 1) + b;
+	        },
+	        easeInOut: function(t,b,c,d){
+	            if ((t/=d/2) < 1) return c/2*t*t*t*t + b;
+	            return -c/2 * ((t-=2)*t*t*t - 2) + b;
+	        }
+	    },
+	    Quint: {
+	        easeIn: function(t,b,c,d){
+	            return c*(t/=d)*t*t*t*t + b;
+	        },
+	        easeOut: function(t,b,c,d){
+	            return c*((t=t/d-1)*t*t*t*t + 1) + b;
+	        },
+	        easeInOut: function(t,b,c,d){
+	            if ((t/=d/2) < 1) return c/2*t*t*t*t*t + b;
+	            return c/2*((t-=2)*t*t*t*t + 2) + b;
+	        }
+	    },
+	    Sine: {
+	        easeIn: function(t,b,c,d){
+	            return -c * Math.cos(t/d * (Math.PI/2)) + c + b;
+	        },
+	        easeOut: function(t,b,c,d){
+	            return c * Math.sin(t/d * (Math.PI/2)) + b;
+	        },
+	        easeInOut: function(t,b,c,d){
+	            return -c/2 * (Math.cos(Math.PI*t/d) - 1) + b;
+	        }
+	    },
+	    Expo: {
+	        easeIn: function(t,b,c,d){
+	            return (t==0) ? b : c * Math.pow(2, 10 * (t/d - 1)) + b;
+	        },
+	        easeOut: function(t,b,c,d){
+	            return (t==d) ? b+c : c * (-Math.pow(2, -10 * t/d) + 1) + b;
+	        },
+	        easeInOut: function(t,b,c,d){
+	            if (t==0) return b;
+	            if (t==d) return b+c;
+	            if ((t/=d/2) < 1) return c/2 * Math.pow(2, 10 * (t - 1)) + b;
+	            return c/2 * (-Math.pow(2, -10 * --t) + 2) + b;
+	        }
+	    },
+	    Circ: {
+	        easeIn: function(t,b,c,d){
+	            return -c * (Math.sqrt(1 - (t/=d)*t) - 1) + b;
+	        },
+	        easeOut: function(t,b,c,d){
+	            return c * Math.sqrt(1 - (t=t/d-1)*t) + b;
+	        },
+	        easeInOut: function(t,b,c,d){
+	            if ((t/=d/2) < 1) return -c/2 * (Math.sqrt(1 - t*t) - 1) + b;
+	            return c/2 * (Math.sqrt(1 - (t-=2)*t) + 1) + b;
+	        }
+	    },
+	    Elastic: {
+	        easeIn: function(t,b,c,d,a,p){
+	            if (t==0) return b;  if ((t/=d)==1) return b+c;  if (!p) p=d*.3;
+	            if (!a || a < Math.abs(c)) { a=c; var s=p/4; }
+	            else var s = p/(2*Math.PI) * Math.asin (c/a);
+	            return -(a*Math.pow(2,10*(t-=1)) * Math.sin( (t*d-s)*(2*Math.PI)/p )) + b;
+	        },
+	        easeOut: function(t,b,c,d,a,p){
+	            if (t==0) return b;  if ((t/=d)==1) return b+c;  if (!p) p=d*.3;
+	            if (!a || a < Math.abs(c)) { a=c; var s=p/4; }
+	            else var s = p/(2*Math.PI) * Math.asin (c/a);
+	            return (a*Math.pow(2,-10*t) * Math.sin( (t*d-s)*(2*Math.PI)/p ) + c + b);
+	        },
+	        easeInOut: function(t,b,c,d,a,p){
+	            if (t==0) return b;  if ((t/=d/2)==2) return b+c;  if (!p) p=d*(.3*1.5);
+	            if (!a || a < Math.abs(c)) { a=c; var s=p/4; }
+	            else var s = p/(2*Math.PI) * Math.asin (c/a);
+	            if (t < 1) return -.5*(a*Math.pow(2,10*(t-=1)) * Math.sin( (t*d-s)*(2*Math.PI)/p )) + b;
+	            return a*Math.pow(2,-10*(t-=1)) * Math.sin( (t*d-s)*(2*Math.PI)/p )*.5 + c + b;
+	        }
+	    },
+	    Back: {
+	        easeIn: function(t,b,c,d,s){
+	            if (s == undefined) s = 1.70158;
+	            return c*(t/=d)*t*((s+1)*t - s) + b;
+	        },
+	        easeOut: function(t,b,c,d,s){
+	            if (s == undefined) s = 1.70158;
+	            return c*((t=t/d-1)*t*((s+1)*t + s) + 1) + b;
+	        },
+	        easeInOut: function(t,b,c,d,s){
+	            if (s == undefined) s = 1.70158;
+	            if ((t/=d/2) < 1) return c/2*(t*t*(((s*=(1.525))+1)*t - s)) + b;
+	            return c/2*((t-=2)*t*(((s*=(1.525))+1)*t + s) + 2) + b;
+	        }
+	    },
+	    Bounce: {
+	        easeIn: function(t,b,c,d){
+	            return c - Tween.Bounce.easeOut(d-t, 0, c, d) + b;
+	        },
+	        easeOut: function(t,b,c,d){
+	            if ((t/=d) < (1/2.75)) {
+	                return c*(7.5625*t*t) + b;
+	            } else if (t < (2/2.75)) {
+	                return c*(7.5625*(t-=(1.5/2.75))*t + .75) + b;
+	            } else if (t < (2.5/2.75)) {
+	                return c*(7.5625*(t-=(2.25/2.75))*t + .9375) + b;
+	            } else {
+	                return c*(7.5625*(t-=(2.625/2.75))*t + .984375) + b;
+	            }
+	        },
+	        easeInOut: function(t,b,c,d){
+	            if (t < d/2) return Tween.Bounce.easeIn(t*2, 0, c, d) * .5 + b;
+	            else return Tween.Bounce.easeOut(t*2-d, 0, c, d) * .5 + c*.5 + b;
+	        }
+	    }
+	};
+
+	Y.widget.Tween = Tween;
+})(YSL);
+YSL.use('widget.Tween', function(Y){
+	var SUPPORT_PROS_REG = /^(left|top|right|bottom|width|height|margin|padding|spacing|backgroundx|backgroundy)$/i;
+	var STEP_FREQ = {
+		'veryslow': 8,
+		'slow': 2,
+		'normal': 1,
+		'fast': 0.5,
+		'veryfast': 0.25
+	};
+
+	/**
+	 * 简单动画库
+	 * @param {Mix} tag
+	 * @param {Object} config
+	**/
+	var Animate = function(tag, config){
+		var _this = this;
+		this.target = Y.dom.one(tag);
+		this.config = Y.object.extend(true, {
+			interval: 15,
+			tween: 'Elastic.easeOut',
+			from: {},
+			to: {},
+			speed: 'veryslow',
+			step: null
+		}, config);
+
+		this.status = 0;	//0,1,2,3 normal, runing, pausing, finish
+		this._t = 0;
+		this._timer;
+
+		this.onStart = this.onRuning = this.onPause = this.onResume = this.onFinish = Y.emptyFn;
+		this.config.speed = this.config.speed.toLowerCase();
+
+		if(Y.lang.isString(this.config.tween)){
+			this.config.tween = Y.object.route(Y.widget.Tween, this.config.tween);
+		}
+
+		if(typeof(this.config.tween) != 'function' || !this.target){
+			throw('PARAM ERROR IN ANIMATE');
+		}
+
+		Y.lang.each(this.config.to, function(val, key){
+			if(SUPPORT_PROS_REG.test(key)){
+				_this.config.from[key] = parseInt(_this.target.getStyle(key), 10);
+				if(!_this.config.step){
+					var f = Math.abs(Math.ceil((_this.config.to[key] - _this.config.from[key])/_this.config.interval));
+					_this.config.step = Math.ceil(f*STEP_FREQ[_this.config.speed]);
+				}
+			}
+		});
+	};
+
+	/**
+	 * 运行
+	**/
+	Animate.prototype._run = function(){
+		var _this = this;
+		var b, c, d=this.config.step;
+		var _run = function(){
+			if(_this.status == 1){
+				var newStyle = {};
+				Y.lang.each(_this.config.to, function(item, key){
+					c = item - _this.config.from[key];
+					newStyle[key] = _this.config.tween(_this._t, _this.config.from[key], c, d);
+				});
+				_this.target.setStyle(newStyle);
+				if(_this._t++ < d){
+					_this.onRuning(_this._t);
+					_this._timer = setTimeout(_run, _this.config.interval);
+				} else {
+					_this.onFinish();
+					_this.status = 3;
+				}
+			}
+		};
+		_run();
+	};
+
+	/**
+	 * 从初始状态开始
+	**/
+	Animate.prototype.start = function(){
+		this.onStart();
+		this.reset();
+		this.status = 1;
+		this._run();
+	};
+
+	/**
+	 * 重设到初始态
+	**/
+	Animate.prototype.reset = function(){
+		this.status = 0;
+		this._t = 0;
+		clearTimeout(this._timer);
+		this.target.setStyle(this.config.from);
+	};
+
+	/**
+	 * 停止动画
+	 * @deprecate 与重设同样处理
+	**/
+	Animate.prototype.stop = function(){
+		this.reset();
+	};
+
+	/**
+	 * 暂停动画
+	 * @deprecate 只有在动画运行中有效
+	**/
+	Animate.prototype.pause = function(){
+		if(this.status == 1){
+			this.status = 2;
+			this.onPause();
+		}
+	};
+
+	/**
+	 * 恢复动画
+	 * @deprecate 只有在动画暂停中有效
+	**/
+	Animate.prototype.resume = function(){
+		if(this.status == 2){
+			this.status = 1;
+			this._run();
+			this.onResume();
+		}
+	};
+
+	console.log('Y.widget.Animate', Animate);
+
+	Y.widget.Animate = Animate;
+});
 
