@@ -1,10 +1,10 @@
 YSL.use('widget.masklayer', function(Y){
 	Y.dom.insertStyleSheet([
 		'.PopupDialog {position:absolute; top:20px; left:20px; width:350px; border:1px solid #999; background-color:white; box-shadow:0 0 10px #535658}',
-		'.PopupDialog-hd {height:28px; background-color:#f3f3f3; border-bottom:1px solid #E5E5E5; cursor:move; position:relative;}',
+		'.PopupDialog-hd {height:28px; background-color:#e4e4e4; cursor:move; position:relative;}',
 		'.PopupDialog-hd h3 {font-size:12px; font-weight:bolder; color:gray; padding-left:10px; line-height:28px;}',
 		'.PopupDialog-close {display:block; overflow:hidden; width:28px; height:28px; position:absolute; right:0; top:0; text-align:center; cursor:pointer; font-size:17px; font-family:Verdana; text-decoration:none; color:gray;}',
-		'.PopupDialog-close:hover {color:blue}',
+		'.PopupDialog-close:hover {color:black;}',
 		'.PopupDialog-ft {background-color:#f3f3f3; white-space:nowrap; border-top:1px solid #e0e0e0; padding:5px 5px 5px 0; text-align:right;}',
 		'.PopupDialog-bd {padding:20px;}',
 		'.PopupDialog-bd-frm {border:none; width:100%}',
@@ -26,20 +26,20 @@ YSL.use('widget.masklayer', function(Y){
 	var Popup = function(cfg){
 		this.container = null;
 		this.status = 0;
-		this.moving = false;
 		this._constructReady = Y.emptyFn;
 		this._constructed = false;
+		this.guid = 'YSL_POPUP_'+ (++GUID);
 		this.onShow = Y.emptyFn;
 		this.onClose = Y.emptyFn;
-		this.guid = 'YSL_POPUP_'+ (++GUID);
 
 		this.config = Y.object.extend(true, {
 			ID_PRE: 'popup-dialog-id-pre',
 			title: '对话框',				//标题
 			content: '测试',				//content.src content.id
-			zIndex: 1000,					//高度
 			width: 400,						//宽度
 			moveEnable: true,				//框体可移动
+			moveTriggerByContainer: false,	//内容可触发移动
+			zIndex: 1000,					//高度
 			isModal: false,					//模态对话框
 			topCloseBtn: true,				//是否显示顶部关闭按钮,如果显示顶部关闭按钮，则支持ESC关闭窗口行为
 			showMask: true,
@@ -77,7 +77,7 @@ YSL.use('widget.masklayer', function(Y){
 			this.container = Y.dom.create('div').addClass(this.config.cssClass.dialog);
 			this.container.setStyle('left', '-9999px');
 		}
-		this.container.id = this.config.ID_PRE + Math.random();
+		this.container.getDomNode().id = this.config.ID_PRE + Math.random();
 
 		//构建内容容器
 		var content = '';
@@ -248,6 +248,19 @@ YSL.use('widget.masklayer', function(Y){
 					dialog.setDisable();
 				}
 			});
+			this.focus();
+		} else {
+			this.focus();
+		}
+	};
+
+	/**
+	 * 聚焦到当前对话框第一个按钮
+	 */
+	Popup.prototype.focus = function() {
+		var a = this.container.one('A');
+		if(a){
+			a.getDomNode().focus();
 		}
 	};
 
@@ -267,7 +280,7 @@ YSL.use('widget.masklayer', function(Y){
 	Popup.prototype.setDisable = function() {
 		var size = this.container.getSize();
 		var mask = this.container.one('.PopupDialog-Modal-Mask');
-		mask.setStyle({height:size.height, opacity:0.4});
+		mask.setStyle({height:size.height, opacity:0.7});
 	};
 
 	/**
@@ -361,41 +374,38 @@ YSL.use('widget.masklayer', function(Y){
 			return;
 		}
 		var _this = this;
-		var head = this.container.one('.'+this.config.cssClass.head);
+		var _lastPoint = {X:0, Y:0};
+		var _lastRegion = {top:0, left:0};
+		var _moving;
+
+		Y.event.add(Y.D, 'mousemove', function(e){
+			e = e || Y.W.event;
+			if(!_this.container || !_moving || Y.event.getButton(e) !== 0){
+				return false;
+			}
+			offsetX = parseInt(e.clientX - _lastPoint.X, 10);
+			offsetY = parseInt(e.clientY - _lastPoint.Y, 10);
+			var newLeft = Math.max(_lastRegion.left + offsetX,0);
+			var newTop = Math.max(_lastRegion.top + offsetY,0);
+			_this.container.setStyle({top:newTop,left:newLeft});
+		});
 
 		Y.event.add(Y.D, 'mousedown', function(e){
-			var tag = Y.dom.one(Y.event.getTarget());
-			if(head && head.parentNode && !(tag == head || head.contains(tag))){
+			if(!_this.container){
 				return;
 			}
-
-			_this.moving = false;
-
-			if((Y.ua.ie && (e.button == 1 || e.button == 0)) || e.button == 0){
-				_this.moving = true;
+			var head = _this.config.moveTriggerByContainer ? _this.container : _this.container.one('.'+_this.config.cssClass.head);
+			var tag = Y.dom.one(Y.event.getTarget());
+			if(head.contains(tag)){
+				_moving = true;
+				_lastRegion = _this.container.getRegion();
+				_lastPoint = {X: e.clientX, Y: e.clientY};
+				Y.event.preventDefault(e);
 			}
-
-			if(_this.moving && (e.button == 1 || e.button == 0)){
-				var conRegion = _this.container.getRegion();
-				px = parseInt(e.clientX - conRegion.left);
-				py = parseInt(e.clientY - conRegion.top);
-
-				Y.event.add(Y.D, 'mousemove', function(e2){
-					if(!_this.moving || Y.event.getButton(e2) !== 0){
-						return false;
-					}
-					e2 = e2 || Y.W.event;
-					var newLeft = e2.clientX - px,
-						newTop = e2.clientY - py;
-					newTop = newTop >= 0 ? newTop : 0;	//限制对话框不能被拖出窗口
-					_this.container.setStyle({top:newTop,left:newLeft});
-				});
-			}
-			Y.event.preventDefault();
-			return false;
 		});
+
 		Y.event.add(Y.D, 'mouseup', function(){
-			_this.moving = false;
+			_moving = false;
 		});
 	}
 
@@ -413,6 +423,18 @@ YSL.use('widget.masklayer', function(Y){
 			hasDialogLeft = false,
 			hasModalPanelLeft = false;
 
+		if(!this.config.keepWhileHide){
+			var tmp = [];
+			Y.lang.each(POPUP_COLLECTION, function(dialog){
+				if(dialog != _this){
+					tmp.push(dialog);
+				}
+			});
+			POPUP_COLLECTION = tmp;
+			_this.container.remove();
+			_this.container = null;
+		}
+
 		Y.lang.each(POPUP_COLLECTION, function(dialog){
 			if(dialog.status){
 				hasDialogLeft = true;
@@ -420,6 +442,7 @@ YSL.use('widget.masklayer', function(Y){
 			if(dialog.status && dialog.config.isModal){
 				hasModalPanelLeft = true;
 				dialog.setEnable();
+				dialog.focus();
 				return false;
 			}
 		});
@@ -431,26 +454,23 @@ YSL.use('widget.masklayer', function(Y){
 
 		//剩下的都是普通对话框
 		if(!hasModalPanelLeft){
+			var _lastTopPanel;
 			Y.lang.each(POPUP_COLLECTION, function(dialog){
+				if(!dialog.status){
+					return;
+				}
 				dialog.setEnable();
-			});
-		}
-
-		if(!this.config.keepWhileHide){
-			var tmp = [];
-			Y.lang.each(POPUP_COLLECTION, function(dialog){
-				if(dialog != _this){
-					tmp.push(dialog);
+				if(!_lastTopPanel){
+					_lastTopPanel = dialog;
+				} else if(_lastTopPanel.config.zIndex <= dialog.config.zIndex){
+					_lastTopPanel = dialog;
 				}
 			});
-
-			POPUP_COLLECTION = tmp;
-			_this.container.remove();
-			_this.container = null;
-			_this = null;
+			if(_lastTopPanel){
+				_lastTopPanel.focus();
+			}
 		}
 	}
-
 
 	/**
 	 * 关闭其他窗口

@@ -1,11 +1,11 @@
 processing ...
 [Merge Type]:merge
 [BASE] project in process  -----------------------------------------
->> ../source/base/core.js     loaded... 3296 byte.
+>> ../source/base/core.js     loaded... 3281 byte.
 >> ../source/base/lang.js     loaded... 5875 byte.
 >> ../source/base/selector.js     loaded... 4724 byte.
 >> ../source/base/event.js     loaded... 7846 byte.
->> ../source/base/dom.js     loaded... 19801 byte.
+>> ../source/base/dom.js     loaded... 19803 byte.
 >> ../source/base/net.js     loaded... 10616 byte.
 >> ../source/base/ua.js     loaded... 1159 byte.
 >> ../source/base/object.js     loaded... 2649 byte.
@@ -13,13 +13,13 @@ processing ...
 
 merge target files...
 
-Write file for release... done.  File length: 59750 byte.
+Write file for release... done.  File length: 59737 byte.
 
 [BASE] builded success ------------------------------------
 
 
 [ALL] project in process  -----------------------------------------
->> ../source/ysl.base.js     loaded... 59750 byte.
+>> ../source/ysl.base.js     loaded... 59737 byte.
 >> ../source/com/cookie.js     loaded... 1187 byte.
 >> ../source/com/date.js     loaded... 2611 byte.
 >> ../source/com/media.js     loaded... 4687 byte.
@@ -29,10 +29,10 @@ Write file for release... done.  File length: 59750 byte.
 >> ../source/widget/helper.js     loaded... 1199 byte.
 >> ../source/widget/pageslide.js     loaded... 3129 byte.
 >> ../source/widget/pagination.js     loaded... 3165 byte.
->> ../source/widget/popup.js     loaded... 15228 byte.
+>> ../source/widget/popup.js     loaded... 15690 byte.
 >> ../source/widget/slide.js     loaded... 1371 byte.
 >> ../source/widget/tab.js     loaded... 572 byte.
->> ../source/widget/tip.js     loaded... 1768 byte.
+>> ../source/widget/tip.js     loaded... 1857 byte.
 >> ../source/widget/tween.js     loaded... 5669 byte.
 >> ../source/widget/validator.js     loaded... 6183 byte.
 
@@ -40,7 +40,7 @@ merge target files...
 
 min target file...
 
-Write file for release... done.  File length: 78025 byte.
+Write file for release... done.  File length: 78384 byte.
 
 [ALL] builded success ------------------------------------
 

@@ -27,7 +27,7 @@
 	//console adapter
 	if(!Y.W.console){
 		Y.W.console = {log:Y.emptyFn, warn:Y.emptyFn, exception:Y.emptyFn, error:Y.emptyFn, info:Y.emptyFn, dir:Y.emptyFn};
-	}
+	};
 
 	/**
 	 * YSL ready state triggle
@@ -48,8 +48,7 @@
             Y.D.attachEvent("onreadystatechange", cb);
             Y.W.attachEvent("onload", cb);
         }
-        return;
-	}
+	};
 
 
 	/**
@@ -1011,7 +1010,7 @@
 	 * @param {string} rules
 	 * @param {string} styleSheetID
 	 * @return {DOM Element}
-	 * @deprecate Y.dom.insertStyleSheet('* {margin:0;}');
+	 * @description Y.dom.insertStyleSheet('* {margin:0;}');
 	 */
 	Y.dom.insertStyleSheet = function (rules, styleSheetID) {
 		styleSheetID = styleSheetID || 'css_'+Math.random();
