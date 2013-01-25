@@ -18,7 +18,10 @@
 				"../source/base/net.js",
 				"../source/base/ua.js",
 				"../source/base/object.js",
-				"../source/base/string.js"
+				"../source/base/string.js",
+				
+				"../source/widget/tween.js",
+				"../source/widget/animate.js",
 			]
 		},
 		{
