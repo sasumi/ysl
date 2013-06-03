@@ -25,7 +25,7 @@ Write file for release... done.  File length: 63988 byte.
 >> ../source/com/media.js     loaded... 4687 byte.
 >> ../source/widget/animate.js     loaded... 3572 byte.
 >> ../source/widget/datepicker.js     loaded... 11945 byte.
->> ../source/widget/drogdrop.js     loaded... 0 byte.
+>> ../source/widget/drogdrop.js     loaded... 178 byte.
 >> ../source/widget/helper.js     loaded... 1199 byte.
 >> ../source/widget/pageslide.js     loaded... 3129 byte.
 >> ../source/widget/pagination.js     loaded... 3165 byte.
@@ -40,7 +40,7 @@ merge target files...
 
 min target file...
 
-Write file for release... done.  File length: 81599 byte.
+Write file for release... done.  File length: 81734 byte.
 
 [ALL] builded success ------------------------------------
 
