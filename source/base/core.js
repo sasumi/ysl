@@ -16,7 +16,8 @@
 		L:location,			//location alias
 		W:window,			//window alias
 		com: {},			//component initialize
-		widget:{}			//widget initialize
+		widget:{},			//widget initialize
+		TOP_FIRST: true
 	};
 
 	/**
@@ -28,6 +29,17 @@
 	if(!Y.W.console){
 		Y.W.console = {log:Y.emptyFn, warn:Y.emptyFn, exception:Y.emptyFn, error:Y.emptyFn, info:Y.emptyFn, dir:Y.emptyFn};
 	}
+
+	/**
+	 * guid
+	 * @return string
+	 */
+	Y.guid = (function(){
+		var _ID = 0;
+		return function(){
+			return '_ysl_guid_'+(++_ID);
+		};
+	})();
 
 	/**
 	 * YSL ready state triggle
@@ -100,69 +112,88 @@
 	 * 依赖net组件
 	 * @param {String} module 模块名称，支持Y.string 或 YSL.string 或 Y.widget.popup形式
 	 * @param {Function} modList
+	 * @param {Function} callback 回调，第一个参数为YSL，其他的根据module按次序排列
 	 **/
 	Y.use = (function(){
-		var NeedLoadList = [];
 		var CallbackList = [];
-		var ABS_PATH = Y.ENV.getAbsUrl();
-
-		var updateCallback = function(){
-			var tmp = [];
-			for(var i=0; i<CallbackList.length; i++){
-				var allLoaded = true;
-				for(var j=0; j<CallbackList[i].modList.length; j++){
-					if(!Y.object.route(Y, CallbackList[i].modList[j])){
-						allLoaded = false;
-						break;
-					}
-				}
-				if(allLoaded){
-					CallbackList[i].fn(Y)
-				} else {
-					tmp.push(CallbackList[i]);
-				}
+		
+		/**
+		 * 转换模块key为模块实体
+		 * @param string modStr
+		 * @return object||boolean
+		 **/
+		var transKeyToObj = function(modStr){
+			var na = modStr.replace(/^Y\.|^YSL\./i, '');
+			return Y.object.route(Y, na);
+		};
+		
+		/**
+		 * 转换模块名称为路径
+		 * @param string modStr
+		 * @return string
+		 **/
+		var transKeyToPath = (function(){
+			var ABS_PATH = Y.ENV.getAbsUrl();
+			return function(modStr){
+				na = modStr.replace(/^Y\.|^YSL\./i, '');
+				return ABS_PATH+na.replace(/\./g,'/').toLowerCase()+'.js'
 			}
-			CallbackList = tmp;
-		};		
+		})();
 
-		var loadList = function(){
-			debugger;
-			var s = NeedLoadList.join('|');
-			console.log('要加载 ', s);
-
-			Y.net.loadScript(NeedLoadList, function(){
-				debugger;
-				updateCallback();
-				console.log('加载成功 ', s);
-				setTimeout(function(){
-					debugger;
-					if(NeedLoadList.length){
-						loadList();
+		/**
+		 * 循环检测
+		 **/
+		var loopCheck = function(){
+			var needUpdate = false;
+			var tmp = [];
+			Y.lang.each(CallbackList, function(item){
+				var allLoaded = true;
+				Y.lang.each(item.modList, function(modStr){
+					if(!transKeyToObj(modStr)){
+						allLoaded = false;
+						return false;
 					}
-				}, 0);
+				});
+				if(allLoaded){
+					var param = [Y];
+					Y.lang.each(item.modList, function(modStr){
+						param.push(transKeyToObj(modStr));
+					});
+					item.fn.apply(null, param);
+					needUpdate = true;
+				} else {
+					tmp.push(item);
+				}
 			});
-			NeedLoadList = [];
+			CallbackList = tmp;
+			if(needUpdate){
+				loopCheck();
+			}
 		};
 
 		return function(modStr, callback){
-			callback = callback || Y.emptyFn;
-
 			var modList = [];
+			var fileList = [];
 			Y.lang.each(modStr.split(','), function(str){
 				var str = Y.string.trim(str);
 				if(str){
-					var na = str.replace(/^Y\.|^YSL\./i, '');
-					if(!Y.object.route(Y, na)){
-						modList.push(na);
-						NeedLoadList.push(ABS_PATH+na.replace(/\./g,'/').toLowerCase()+'.js');
+					modList.push(str);
+					if(!transKeyToObj(str)){
+						fileList.push(transKeyToPath(str));
 					}
 				}
 			});
-			if(modList.length){
+			if(fileList.length){
 				CallbackList.push({fn:callback, modList: modList});
-				loadList();
+				Y.net.loadScript(fileList, function(){
+					loopCheck();
+				});
 			} else {
-				callback(Y);
+				var param = [Y];
+				Y.lang.each(modList, function(modStr){
+					param.push(transKeyToObj(modStr));
+				});
+				callback.apply(null, param);
 			}
 		};
 	})();

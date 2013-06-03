@@ -42,7 +42,7 @@
 		/**
 		 * 事件绑定
 		 *
-		 * @param {DocumentElement} obj 需要添加事件的页面对象
+		 * @param {DOM} obj 需要添加事件的页面对象
 		 * @param {String} eventType 需要添加的事件
 		 * @param {Function} fn 事件需要绑定到的处理函数
 		 * @param {Array} argArray 参数数组
@@ -54,7 +54,7 @@
 		add: function(obj, eventType, fn, argArray){
 			var cfn,
 				res = false, l,
-				obj = obj.getDomNode ? obj.getDomNode(): obj;
+				obj = Y.dom.one(obj).getDomNode();
 
 			if (!obj){
 				return res;
@@ -136,11 +136,9 @@
 			var cfn = fn,
 				res = false,
 				l = _eventListDictionary,
-				r;
+				r,
+				obj = Y.dom.one(obj).getDomNode();
 
-			if (!obj){
-				return res;
-			}
 			if (!fn){
 				return this.purge(obj, eventType);
 			}
@@ -177,7 +175,7 @@
 		 * @return {Boolean} 是否成功取消(true为成功，false为失败)
 		 */
 		purge: function(obj, type){
-			var l;
+			var l, obj = Y.dom.one(obj).getDomNode();
 			if (obj.eventsListUID && (l = _eventListDictionary[obj.eventsListUID]) && l[type]){
 				for (var k in l[type]){
 					if (obj.removeEventListener){
@@ -239,6 +237,18 @@
 				return -1
 			}
 
+			/**
+			if(!e.which && e.button){
+				if(e.button & 1){
+					e.which = 1;
+				} else if(e.button & 2){
+					e.which = 2;
+				} else if(e.button & 4){
+					e.which = 3;
+				}
+			}
+			**/
+
 			if (Y.ua.ie){
 				return e.button - Math.ceil(e.button / 2);
 			} else {
@@ -256,7 +266,7 @@
 		getTarget: function(evt){
 			var e = this.get(evt);
 			if (e){
-				return e.srcElement || e.target;
+				return Y.dom.one(e.srcElement || e.target);
 			} else {
 				return null;
 			}
@@ -352,29 +362,39 @@
 
 		/**
 		 * 事件冒泡绑定
-		 * @param  {DOM} pDom
-		 * @param  {Mix} hook
-		 * @param  {String} evStr
+		 * @param  {string} selector
+		 * @param  {String} eventType
 		 * @param  {Function} handler
+		 * @param  {DOM} pDom
 		 */
-		delegate: function(pDom, hook, evStr, handler){
-			var _this = this;
-			var pDom = pDom || document.body;
-			var hookFn = typeof(hook) == 'string' ? function(n){
-				return n.nodeType == 1 && n.tagName == hook.toUpperCase();
-			} : hook;
-
-			this.add(pDom, evStr, function(evt){
-				var n = _this.getTarget(evt);
-				while(n){
-					if(hookFn(n)){
-						handler.call(n, evt);
-						return;
+		delegate: (function(){
+			var check = function(n, selector){
+				var found = false;
+				Y.dom.all(selector).each(function(item){
+					if(item && (item.contains(n) || item.equal(n))){
+						found = true;
+						return false;
 					}
-					n = n.parentNode;
-				}
-			})
-		}
+				});
+				return found;
+			};
+
+			return function(pDom, selector, eventType, handler){
+				var _this = this;
+				var pDom = pDom || Y.dom.one('body');
+
+				this.add(pDom, eventType, function(evt){
+					var n = _this.getTarget(evt);
+					while(n && n.getDomNode().nodeType == 1){
+						if(check(n, selector)){
+							handler.call(n, evt);
+							return;
+						}
+						n = n.parent();
+					}
+				})
+			}
+		})()
 	}
 
 	Y.event = _Event;

@@ -11,6 +11,9 @@
 		h1, h2, h3, h4 {text-transform: uppercase; margin:0.5em 0 0.5em 0; text-shadow:2px 2px black}
 		h1 {font-size:24px; border-bottom:1px dashed #555; padding-bottom:0.5em}
 		h2 {font-size:18px;}
+
+		.focus1 {font-size:20px}
+		.focus2 {font-style:italic}
 	</style>
 </head>
 <body>
@@ -46,7 +49,16 @@
 			var inputs = Y.dom.all('input');
 			inputs.setStyle({color: 'red', marginTop:'10px', padding:'5px', width:'200px'});
 			inputs.on('click', function(){
-				alert(this.getAttr('id'));
+				console.log(this.getAttr('id'));
+			});
+
+			inputs.on('focus', function(){
+				this.addClass('focus1 focus2');
+			});
+
+			inputs.on('blur', function(){
+				console.log('blur', this.getDomNode());
+				this.removeClass('focus1 focus2');
 			});
 		})(YSL);
 	</script>

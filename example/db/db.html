@@ -1,0 +1,155 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
+<head>
+	<meta http-equiv="Content-Type" content="text/html;charset=UTF-8" />
+	<title>database modeling</title>
+	<link rel="stylesheet" type="text/css" href="css/reset.css" media="all"/>
+	<link rel="stylesheet" type="text/css" href="css/global.css" media="all"/>
+	<script type="text/javascript" src="../../source/ysl.base.js"></script>
+</head>
+<body class="page">
+	<dl class="db-tools" style="position:absolute; top:20px; left:20px">
+		<dd><span class="tool-icon tool-icon-open" title="open"></span></dd>
+		<dd><span class="tool-icon tool-icon-new" title="new table"></span></dd>
+		<dd><span class="tool-icon tool-icon-save" title="save"></span></dd>
+		<dt></dt>
+		<dd><span class="tool-icon tool-icon-cursor" title="cursor tool"></span></dd>
+		<dd><span class="tool-icon tool-icon-lock" title="lock current table"></span></dd>
+		<dd><span class="tool-icon tool-icon-selectall" title="select all tables"></span></dd>
+		<dt>tools</dt>
+		<dd><span class="tool-icon tool-icon-tile" title="tile all tables"></span></dd>
+		<dd><span class="tool-icon tool-icon-cascade" title="cascade all tables"></span></dd>
+		<dd><span class="tool-icon tool-icon-tile-horizontal" title="tile horizontal all tables"></span></dd>
+		<dd><span class="tool-icon tool-icon-tile-vertical" title="tile vertical all tables"></span></dd>
+		<dt>tools</dt>
+		<dd><span class="tool-icon tool-icon-zoomin" title="zoom in"></span></dd>
+		<dd><span class="tool-icon tool-icon-zoomout" title="zoom out"></span></dd>
+	</dl>
+
+	<div class="db-table" style="top:50px; left:200px">
+		<div class="db-table-hd">
+			user
+			<b class="collapse-btn"></b>
+		</div>
+		<div class="db-table-con">
+			<dl>
+				<dd class="db-pk">pk</dd>
+				<dd class="db-fk">fk</dd>
+				<dd class="db-nn">name</dd>
+				<dd>description</dd>
+			</dl>
+			<dl class="db-table-indexes">
+				<dt>Indexes<b class="collapse-btn"></b></dt>
+				<dd>PRAMARY</dd>
+			</dl>
+		</div>
+	</div>
+
+	<div class="db-table" style="top:200px; left:300px">
+		<div class="db-table-hd">
+			user
+			<b class="collapse-btn"></b>
+		</div>
+		<div class="db-table-con">
+			<dl>
+				<dd class="db-pk">pk</dd>
+				<dd class="db-fk">fk</dd>
+				<dd class="db-nn">name</dd>
+				<dd>description</dd>
+			</dl>
+			<dl class="db-table-indexes">
+				<dt>Indexes<b class="collapse-btn"></b></dt>
+				<dd>PRAMARY</dd>
+			</dl>
+		</div>
+	</div>
+
+	<script type="text/javascript">
+		YSL.use('widget.Resizer,widget.Dragdrop', function(Y, RZ, DD){
+			var LAST_zIndex = 1;
+			var LAST_TABLE = null;
+			var LAST_RZ;
+			
+			var updateTableActiveState = function(curTbl, lastTbl, clickTag){
+				if(clickTag.equal(YSL.dom.one('body')) || curTbl){
+					lastTbl && lastTbl.removeClass('db-table-active');
+				}
+				curTbl && curTbl.addClass('db-table-active');
+				
+				if(curTbl){
+					LAST_RZ = RZ.singleton(curTbl);
+					LAST_RZ.onStart = function(){
+						var rg = curTbl.getRegion();
+						this.option.minWidth = 123;
+						this.option.minHeight = curTbl.one('.db-table-hd').getRegion('height') + 
+							curTbl.one('.db-table-con').getRegion('height');
+					}
+				} else {
+					if(LAST_RZ && !LAST_RZ.dom.contains(clickTag)){
+						LAST_RZ.hide();
+					}
+				}
+			};
+			
+			Y.dom.one('body').on('mousedown', function(e){
+				var tag = Y.event.getTarget(e);
+				if(LAST_RZ && LAST_RZ.dom.contains(tag)){
+					return;
+				}
+				
+				var CUR_TABLE = null;
+				Y.dom.all('.db-table').each(function(tbl){
+					if(tbl.contains(tag) || tbl.equal(tag)){
+						CUR_TABLE = tbl;
+						return false;
+					}
+				});
+				
+				updateTableActiveState(CUR_TABLE, LAST_TABLE, tag);
+				LAST_TABLE = CUR_TABLE;
+			});
+
+			Y.dom.all('.db-table').each(function(tbl){
+				var dd = new DD(tbl, {container: 'body'});
+				dd.onStart = function(){
+					var z = parseInt(this.tag.getStyle('zIndex'), 10) || 0;
+					if(z < LAST_zIndex){
+						this.tag.setStyle('zIndex', LAST_zIndex++);
+						Y.dom.one('.db-tools').setStyle('zIndex', LAST_zIndex+1);
+						if(LAST_RZ){
+							LAST_RZ.dom.setStyle('zIndex', LAST_zIndex-1);
+						}
+					}
+				};
+				dd.onMoving = function(){
+					if(LAST_RZ){
+						LAST_RZ.update();
+					}
+				}
+				dd.start();
+			});
+
+			Y.dom.one('.db-tools').on('dblclick', function(){
+				this.toggleClass('db-tools-min');
+			});
+
+			var dd = new DD('.db-tools', {container: 'body'});
+			dd.start();
+		});
+
+		YSL.dom.delegate('.tool-icon-new', 'click', function(){
+			YSL.use('widget.Popup,widget.Tip', function(Y, Pop, Tip){
+				var pop = new Pop({
+					//topCloseBtn: false,
+					title: 'New Table',
+					content: {src:'new_table.html'},
+					buttons: [{name:'Save', handler: function(){
+						new Tip('asdxxxfasdf');
+					}}, {name:'Cancel'}]
+				});
+				pop.show();
+			});
+		});
+	</script>
+</body>
+</html>

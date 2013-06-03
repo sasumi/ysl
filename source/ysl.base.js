@@ -16,7 +16,8 @@
 		L:location,			//location alias
 		W:window,			//window alias
 		com: {},			//component initialize
-		widget:{}			//widget initialize
+		widget:{},			//widget initialize
+		TOP_FIRST: true
 	};
 
 	/**
@@ -28,6 +29,17 @@
 	if(!Y.W.console){
 		Y.W.console = {log:Y.emptyFn, warn:Y.emptyFn, exception:Y.emptyFn, error:Y.emptyFn, info:Y.emptyFn, dir:Y.emptyFn};
 	}
+
+	/**
+	 * guid
+	 * @return string
+	 */
+	Y.guid = (function(){
+		var _ID = 0;
+		return function(){
+			return '_ysl_guid_'+(++_ID);
+		};
+	})();
 
 	/**
 	 * YSL ready state triggle
@@ -100,69 +112,88 @@
 	 * 依赖net组件
 	 * @param {String} module 模块名称，支持Y.string 或 YSL.string 或 Y.widget.popup形式
 	 * @param {Function} modList
+	 * @param {Function} callback 回调，第一个参数为YSL，其他的根据module按次序排列
 	 **/
 	Y.use = (function(){
-		var NeedLoadList = [];
 		var CallbackList = [];
-		var ABS_PATH = Y.ENV.getAbsUrl();
-
-		var updateCallback = function(){
-			var tmp = [];
-			for(var i=0; i<CallbackList.length; i++){
-				var allLoaded = true;
-				for(var j=0; j<CallbackList[i].modList.length; j++){
-					if(!Y.object.route(Y, CallbackList[i].modList[j])){
-						allLoaded = false;
-						break;
-					}
-				}
-				if(allLoaded){
-					CallbackList[i].fn(Y)
-				} else {
-					tmp.push(CallbackList[i]);
-				}
+		
+		/**
+		 * 转换模块key为模块实体
+		 * @param string modStr
+		 * @return object||boolean
+		 **/
+		var transKeyToObj = function(modStr){
+			var na = modStr.replace(/^Y\.|^YSL\./i, '');
+			return Y.object.route(Y, na);
+		};
+		
+		/**
+		 * 转换模块名称为路径
+		 * @param string modStr
+		 * @return string
+		 **/
+		var transKeyToPath = (function(){
+			var ABS_PATH = Y.ENV.getAbsUrl();
+			return function(modStr){
+				na = modStr.replace(/^Y\.|^YSL\./i, '');
+				return ABS_PATH+na.replace(/\./g,'/').toLowerCase()+'.js'
 			}
-			CallbackList = tmp;
-		};		
+		})();
 
-		var loadList = function(){
-			debugger;
-			var s = NeedLoadList.join('|');
-			console.log('要加载 ', s);
-
-			Y.net.loadScript(NeedLoadList, function(){
-				debugger;
-				updateCallback();
-				console.log('加载成功 ', s);
-				setTimeout(function(){
-					debugger;
-					if(NeedLoadList.length){
-						loadList();
+		/**
+		 * 循环检测
+		 **/
+		var loopCheck = function(){
+			var needUpdate = false;
+			var tmp = [];
+			Y.lang.each(CallbackList, function(item){
+				var allLoaded = true;
+				Y.lang.each(item.modList, function(modStr){
+					if(!transKeyToObj(modStr)){
+						allLoaded = false;
+						return false;
 					}
-				}, 0);
+				});
+				if(allLoaded){
+					var param = [Y];
+					Y.lang.each(item.modList, function(modStr){
+						param.push(transKeyToObj(modStr));
+					});
+					item.fn.apply(null, param);
+					needUpdate = true;
+				} else {
+					tmp.push(item);
+				}
 			});
-			NeedLoadList = [];
+			CallbackList = tmp;
+			if(needUpdate){
+				loopCheck();
+			}
 		};
 
 		return function(modStr, callback){
-			callback = callback || Y.emptyFn;
-
 			var modList = [];
+			var fileList = [];
 			Y.lang.each(modStr.split(','), function(str){
 				var str = Y.string.trim(str);
 				if(str){
-					var na = str.replace(/^Y\.|^YSL\./i, '');
-					if(!Y.object.route(Y, na)){
-						modList.push(na);
-						NeedLoadList.push(ABS_PATH+na.replace(/\./g,'/').toLowerCase()+'.js');
+					modList.push(str);
+					if(!transKeyToObj(str)){
+						fileList.push(transKeyToPath(str));
 					}
 				}
 			});
-			if(modList.length){
+			if(fileList.length){
 				CallbackList.push({fn:callback, modList: modList});
-				loadList();
+				Y.net.loadScript(fileList, function(){
+					loopCheck();
+				});
 			} else {
-				callback(Y);
+				var param = [Y];
+				Y.lang.each(modList, function(modStr){
+					param.push(transKeyToObj(modStr));
+				});
+				callback.apply(null, param);
 			}
 		};
 	})();
@@ -460,13 +491,38 @@
 	Y.lang = _LANG;
 })(YSL);
 (function(Y){
+	/**
+	 * 特殊对象直接命中
+	 * @param  {string} selector
+	 * @return {[type]}          [description]
+	 */
+	var _fix = function(selector){
+		selector = selector.toLowerCase();
+		if(/^(body|head|html)$/.test(selector)){
+			return Y.D.getElementsByTagName(selector)[0];
+		} else if(selector == 'window'){
+			return Y.W;
+		} else if(selector == 'document'){
+			return Y.D;
+		}
+		return '';
+	}
+
 	//使用浏览器原生selector
 	if(Y.D.querySelector && Y.D.querySelectorAll){
 		Y.querySelector = function(selector, context){
+			var sp = _fix(selector);
+			if(sp){
+				return sp;
+			}
 			var dom = context || Y.D;
 			return dom.querySelector(selector);
 		};
 		Y.querySelectorAll = function(selector, context){
+			var sp = _fix(selector);
+			if(sp){
+				return sp;
+			}
 			var dom = context || Y.D;
 			return dom.querySelectorAll(selector);
 		};
@@ -614,12 +670,20 @@
 		return result_lst;
 	};
 
-	Y.querySelector = function(){
+	Y.querySelector = function(selector){
+		var sp = _fix(selector);
+		if(sp){
+			return sp;
+		}
 		var arr = getElement.apply(null, arguments)[0];
 		return arr;
 	};
 
-	Y.querySelectorAll = function(){
+	Y.querySelectorAll = function(selector){
+		var sp = _fix(selector);
+		if(sp){
+			return [sp];
+		}
 		return getElement.apply(null, arguments);
 	}
 })(YSL);
@@ -667,7 +731,7 @@
 		/**
 		 * 事件绑定
 		 *
-		 * @param {DocumentElement} obj 需要添加事件的页面对象
+		 * @param {DOM} obj 需要添加事件的页面对象
 		 * @param {String} eventType 需要添加的事件
 		 * @param {Function} fn 事件需要绑定到的处理函数
 		 * @param {Array} argArray 参数数组
@@ -679,7 +743,7 @@
 		add: function(obj, eventType, fn, argArray){
 			var cfn,
 				res = false, l,
-				obj = obj.getDomNode ? obj.getDomNode(): obj;
+				obj = Y.dom.one(obj).getDomNode();
 
 			if (!obj){
 				return res;
@@ -761,11 +825,9 @@
 			var cfn = fn,
 				res = false,
 				l = _eventListDictionary,
-				r;
+				r,
+				obj = Y.dom.one(obj).getDomNode();
 
-			if (!obj){
-				return res;
-			}
 			if (!fn){
 				return this.purge(obj, eventType);
 			}
@@ -802,7 +864,7 @@
 		 * @return {Boolean} 是否成功取消(true为成功，false为失败)
 		 */
 		purge: function(obj, type){
-			var l;
+			var l, obj = Y.dom.one(obj).getDomNode();
 			if (obj.eventsListUID && (l = _eventListDictionary[obj.eventsListUID]) && l[type]){
 				for (var k in l[type]){
 					if (obj.removeEventListener){
@@ -864,6 +926,18 @@
 				return -1
 			}
 
+			/**
+			if(!e.which && e.button){
+				if(e.button & 1){
+					e.which = 1;
+				} else if(e.button & 2){
+					e.which = 2;
+				} else if(e.button & 4){
+					e.which = 3;
+				}
+			}
+			**/
+
 			if (Y.ua.ie){
 				return e.button - Math.ceil(e.button / 2);
 			} else {
@@ -881,7 +955,7 @@
 		getTarget: function(evt){
 			var e = this.get(evt);
 			if (e){
-				return e.srcElement || e.target;
+				return Y.dom.one(e.srcElement || e.target);
 			} else {
 				return null;
 			}
@@ -977,29 +1051,39 @@
 
 		/**
 		 * 事件冒泡绑定
-		 * @param  {DOM} pDom
-		 * @param  {Mix} hook
-		 * @param  {String} evStr
+		 * @param  {string} selector
+		 * @param  {String} eventType
 		 * @param  {Function} handler
+		 * @param  {DOM} pDom
 		 */
-		delegate: function(pDom, hook, evStr, handler){
-			var _this = this;
-			var pDom = pDom || document.body;
-			var hookFn = typeof(hook) == 'string' ? function(n){
-				return n.nodeType == 1 && n.tagName == hook.toUpperCase();
-			} : hook;
-
-			this.add(pDom, evStr, function(evt){
-				var n = _this.getTarget(evt);
-				while(n){
-					if(hookFn(n)){
-						handler.call(n, evt);
-						return;
+		delegate: (function(){
+			var check = function(n, selector){
+				var found = false;
+				Y.dom.all(selector).each(function(item){
+					if(item && (item.contains(n) || item.equal(n))){
+						found = true;
+						return false;
 					}
-					n = n.parentNode;
-				}
-			})
-		}
+				});
+				return found;
+			};
+
+			return function(pDom, selector, eventType, handler){
+				var _this = this;
+				var pDom = pDom || Y.dom.one('body');
+
+				this.add(pDom, eventType, function(evt){
+					var n = _this.getTarget(evt);
+					while(n && n.getDomNode().nodeType == 1){
+						if(check(n, selector)){
+							handler.call(n, evt);
+							return;
+						}
+						n = n.parent();
+					}
+				})
+			}
+		})()
 	}
 
 	Y.event = _Event;
@@ -1014,16 +1098,19 @@
 (function(Y){
 	Y.dom = {};
 
+	var PROP_KEYS = /^(scrollTop|scrollLeft)$/i;
+
 	/**
 	 * get scroll top
 	 * @return {Object}
 	 */
 	Y.dom.getScroll= function(){
+		var DE = Y.D.documentElement, BD = Y.D.body;
 		return {
-			top: Math.max(Y.D.documentElement.scrollTop, Y.D.body.scrollTop),
-			left: Math.max(Y.D.documentElement.scrollLeft, Y.D.body.scrollLeft),
-			height: Math.max(Y.D.documentElement.scrollHeight, Y.D.body.scrollHeight),
-			width: Math.max(Y.D.documentElement.scrollWidth, Y.D.body.scrollWidth)
+			top: Math.max(DE.scrollTop, BD.scrollTop),
+			left: Math.max(DE.scrollLeft, BD.scrollLeft),
+			height: Math.max(DE.scrollHeight, BD.scrollHeight),
+			width: Math.max(DE.scrollWidth, BD.scrollWidth)
 		};
 	}
 
@@ -1035,7 +1122,7 @@
 	 * @deprecate Y.dom.insertStyleSheet('* {margin:0;}');
 	 */
 	Y.dom.insertStyleSheet = function (rules, styleSheetID) {
-		styleSheetID = styleSheetID || 'css_'+Math.random();
+		styleSheetID = styleSheetID || Y.guid();
 		var node = Y.dom.one('#'+styleSheetID);
 		if(!node){
 			node = Y.dom.one('head').create('style').setAttr({id:styleSheetID, type:'text/css'});
@@ -1106,35 +1193,65 @@
 	}
 
 	/**
+	 * 检测两个节点是否相同
+	 **/
+	_DOM.prototype.equal = function(tag){
+		return tag && this.getDomNode() == tag.getDomNode();
+	};
+
+	/**
 	 * add css class
 	 * @param {String} cls
 	 * @return {Object}
 	 */
-	_DOM.prototype.addClass = function(cls){
-		this.getDomNode().className += !this.existClass(cls) ? (' ' + cls) : '';
+	_DOM.prototype.addClass = function(cs){
+		var tmp = [], _this = this;
+		Y.lang.each(cs.split(' '), function(c){
+			if(Y.string.trim(c) && !_this.existClass(c)){
+				tmp.push(c);
+			}
+		});
+		if(tmp.length){
+			this.getDomNode().className += ' ' + tmp.join(' ');
+		}
 		return this;
 	}
 
 	/**
-	 * check exist css class
-	 * @param {String} cls
+	 * check exist css classes
+	 * @param {String} cs
 	 * @return {Boolean}
 	 */
-	_DOM.prototype.existClass = function(cls){
-		var e = new RegExp('(\\s|^)' + cls + '(\\s|$)').test(this.getDomNode().className);
-		return e;
+	_DOM.prototype.existClass = function(cs){
+		var exist = true;
+		var cc = this.getDomNode().className;
+		Y.lang.each(cs.split(' '), function(c){
+			c = Y.string.trim(c);
+			if(c && !(new RegExp('(\\s|^)' + c + '(\\s|$)')).test(cc)){
+				exist = false;
+				return false;
+			}
+		});
+		return exist;
 	}
 
 	/**
-	 * remove css class
+	 * remove css classes
 	 * @param {String} cls
 	 * @return {Object}
 	 */
-	_DOM.prototype.removeClass = function(cls){
-		if(this.existClass(cls)){
-			var reg = new RegExp('(\\s|^)' + cls + '(\\s|$)');
-            this.getDomNode().className = this.getDomNode().className.replace(reg, ' ');
-		}
+	_DOM.prototype.removeClass = function(cs){
+		var n = this.getDomNode(),
+			cc = n.className,
+			_this = this;
+		Y.lang.each(cs.split(' '), function(c){
+			c = Y.string.trim(c);
+			if(_this.existClass(c)){
+				var reg = new RegExp('(\\s|^)' + c + '(\\s|$)');
+				cc = cc.replace(c, '');
+			}
+		});
+		n.className = cc;
 		return this;
 	}
 
@@ -1145,6 +1262,7 @@
 	 * @return {Boolean} toggle result
 	 */
 	_DOM.prototype.toggleClass = function(cls1, cls2){
+		cls2 = cls2 || '';
 		if(this.existClass(cls1)){
 			this.removeClass(cls1).addClass(cls2);
 			return true;
@@ -1195,7 +1313,11 @@
 	 * @return {String}
 	 */
 	_DOM.prototype.getAttr = function(a){
-		return this.getDomNode().getAttribute(a);
+		var n = this.getDomNode();
+		if(PROP_KEYS.test(a)){
+			return n[a];
+		}
+		return n.getAttribute(a);
 	}
 
 	/**
@@ -1205,11 +1327,22 @@
 	 * @return {Object}
 	 */
 	_DOM.prototype.setAttr = function(a, v){
+		var n = this.getDomNode();
 		if(typeof(a) == 'string'){
-			this.getDomNode().setAttribute(a, v);
+			if(PROP_KEYS.test(a)){
+				n[a] = v;
+			} else {
+				n.setAttribute(a, v);
+			}
 		} else {
 			for(var i in a){
-				this.getDomNode().setAttribute(i, a[i]);
+				try {
+					if(PROP_KEYS.test(i)){
+						n[i] = a[i];
+					} else {
+						n.setAttribute(i, a[i]);
+					}
+				} catch(ex){}
 			}
 		}
 		return this;
@@ -1398,9 +1531,15 @@
 
 	/**
 	 * relocation to parent node
-	 * @param {Function} fn
+	 * @param mix mix tagName || function
+	 * @return mix
 	 */
 	_DOM.prototype.parent = function(mix){
+		var node = this.getDomNode();
+		if(!node){
+			return null;
+		}
+
 		var fn;
 		if(typeof(mix) == 'string'){
 			fn = function(n){
@@ -1409,19 +1548,19 @@
 		} else if(mix){
 			fn = mix;
 		} else {
-			return new _DOM(Y.getDomNode().parentNode);
+			return node.parentNode ? new _DOM(node.parentNode) : null;
 		}
 		var result;
-		var p = this.getDomNode().parentNode;
+		var p = node.parentNode;
 		if(fn){
-			while(p && p.parentNode){
+			while(p && p.parentNode && p.parentNode.nodeType != 9){
 				if(fn(p)){
 					return new _DOM(p);
 				}
 				p = p.parentNode;
 			}
 		} else {
-			return new _DOM(p);
+			return p ? new _DOM(p) : null;
 		}
 	};
 
@@ -1495,17 +1634,19 @@
 
 	/**
 	 * get region info
-	 * @return {Object}
+	 * @param string key
+	 * @return {mix}
 	 */
-	_DOM.prototype.getRegion = function(){
+	_DOM.prototype.getRegion = function(key){
 		var pos = this.getPosition(),
 			size = this.getSize();
-		return {
+		var reg = {
 			left: pos.left,
 			top: pos.top,
 			width: size.width,
 			height: size.height
-		}
+		};
+		return key ? reg[key] : reg;
 	}
 
 	/**
@@ -1556,15 +1697,36 @@
 	 * @param {Integer} pos position(0,...-1)
 	 * @return {Object} node
 	 */
-	_DOM.prototype.create = function(tp, pos){
+	_DOM.prototype.create = function(tp, pos, pp){
 		var p = (this.getDomNode() || Y.D.body);
 		p = p.nodeType == 9 ? p = p.body : p;
 
-		pos = (pos === undefined) ? -1 : parseInt(pos,10);
+		pos = (pos === undefined) ? -1 : parseInt(pos,10) || 0;
 		var n = typeof(tp) == 'string' ? Y.D.createElement(tp) : tp;
-		pos == -1 ? p.appendChild(n) : p.insertBefore(n, p.childNodes[pos]);
-		return new _DOM(n);
+		if(pos == -1){
+			p.appendChild(n);
+		} else {
+			p.insertBefore(n, p.childNodes[pos]);
+		}
+		var d = new _DOM(n);
+		if(pp){
+			d.setAttr(pp);
+		}
+		return d;
 	}
+
+	/**
+	 * batch append children
+	 * @param DOM n
+	 */
+	_DOM.prototype.append = function(children){
+		var result;
+		var p = this.getDomNode();
+		this.all(children).each(function(child){
+			p.appendChild(child.getDomNode());
+		});
+		return result;
+	};
 
 	/**
 	 * get children nodes
@@ -1616,6 +1778,9 @@
 	_DOM.prototype.contains = function(b){
 		var a = this.getDomNode(),
 			b = b.getDomNode ? b.getDomNode() : b;
+		if(b.nodeType == 9){
+			return false;
+		}
 		return a.contains ? a != b && a.contains(b) : !!(a.compareDocumentPosition(b) & 16);
 	}
 
@@ -1627,6 +1792,9 @@
 	 * @return {Object|Null}
 	 */
 	_DOM.prototype.one = function(selector, context, cond){
+		if(!selector){
+			return null;
+		}
 		var context = context || this.getDomNode();
 		if(typeof(selector) !== 'string'){
 			return selector.getOneDomNode ? selector.getOneDomNode() : (selector.getDomNode ? selector : new _DOM(selector));
@@ -1643,6 +1811,9 @@
 	 * @return {Object}
 	 */
 	_DOM.prototype.all = function(selector, context, cond) {
+		if(!selector){
+			return new _DOMCollection([]);
+		}
 		if(typeof(selector) !== 'string'){
 			return selector.getOneDomNode ? selector : (selector.getDomNode ? new _DOMCollection([selector.getDomNode()]) : new _DOM(selector));
 		}
@@ -1656,7 +1827,6 @@
 	 * extend event method
 	 */
 	var eventMapHash = {
-		'addEvent': 'add',
 		'removeEvent': 'remove',
 		'on': 'add',
 		'delegate': 'delegate'
@@ -1913,74 +2083,36 @@
 	})();
 
 	/**
-	 * flash请求组件
-	 * @deprecated 需要在服务器部署crossdomain.xml
+	 * get 数据
+	 * @param string url
+	 * @param object data
+	 * @param Function callback
+	 * @param object option
+	**/
+	Y.net.get = function(url, data, callback, option){
+		callback = callback || Y.emptyFn;
+		option = Y.object.extend(true, {url:url}, option || {});
+		option.method = 'get';
+		var ajax = new Y.net.Ajax(option);
+		ajax.onResponse = callback;
+		ajax.send();
+	};
+
+	/**
+	 * post 数据
+	 * @param string url
+	 * @param object data
+	 * @param Function callback
+	 * @param object option
 	 **/
-	Y.net.flashSender = (function(){
-		var GUID = 0;
-		var FLASHSENDER_ID = '';
-		var FLASHSENDER_OBJ = '';
-		var FLASHSENDER_SRC = '';
-		var FLASHSENDER_READY;
-		var FLASHSENDER_INIT_CALLBACK_METHOD = 'FLASHSENDER_INIT_CALLBACK';
-		var FLASHSENDER_CALLBACK_METHOD = 'FLASHSENDER_CALLBACK';
-		var FLASHSENDER_CALLBACK_LIST = {};
-
-		/**
-		 * flash初始化状态回调标记
-		 **/
-		Y.W[FLASHSENDER_INIT_CALLBACK_METHOD] = function(){
-			FLASHSENDER_READY = true;
-			delete(Y.W[FLASHSENDER_INIT_CALLBACK_METHOD]);
-		};
-
-		/**
-		 * flash响应回调
-		 * @param {Object} params
-		 **/
-		Y.W[FLASHSENDER_CALLBACK_METHOD] = function(params){
-			if(!params || !params.guid || !params.data){
-				console.log('FLAHSSENDER ERROR', params);
-				return;
-			}
-
-			if(FLASHSENDER_CALLBACK_LIST[params.guid]){
-				FLASHSENDER_CALLBACK_LIST[params.guid](params.data);
-				delete(FLASHSENDER_CALLBACK_LIST[params.guid]);
-			}
-		};
-
-		var sender = function(config){
-			this.config = Y.object.extend(true, {
-				url: '',
-				method: 'get',
-				data: {},
-				cache: false,
-				format: 'json',
-				guid: ++GUID
-			}, config);
-		};
-		sender.initialize = function(){
-			if(FLASHSENDER_READY){
-				return;
-			} else {
-				Y.use('media', function(){
-					//Y.media.insertFlash();
-
-				});
-			}
-		};
-
-		sender.prototype.onResponse = function(data){
-
-		};
-
-		sender.prototype.send = function(){
-
-		};
-
-		return sender;
-	})();
+	Y.net.post = function(url, data, callback, option){
+		callback = callback || Y.emptyFn;
+		option = Y.object.extend(true, {url:url}, option || {});
+		option.method = 'post';
+		var ajax = new Y.net.Ajax(option);
+		ajax.onResponse = callback;
+		ajax.send();
+	};
 
 	/**
 	 * 加载css样式表
@@ -2161,81 +2293,35 @@
 		Y.net.loadScript = loadScript;
 	})(Y.net);
 
-	/**
-	 * data getter
-	 **/
-	(function(net){
-		var GUID = 0;
-		var DataGetter = function(config){
-			var _this = this;
-			this.config = Y.object.extend(true, {
-				url: null,
-				callbacker: 'DataGetterCallback'+(GUID++)
-			}, config);
-
-			Y.W[this.config.callbacker] = function(data){
-				if(!data){
-					_this.onError();
-				} else {
-					_this.onResponse(data);
-				}
-				Y.W[_this.config.callbacker] = null;
-				if(_this.tmpScriptNode){
-					_this.tmpScriptNode.parentNode.removeChild(_this.tmpScriptNode);
-				}
-			};
-
-			if(!this.config.url){
-				throw('DATA GETTER PARAM ERROR');
-			}
-			this.config.url += (this.config.url.indexOf('?')>0 ? '&' : '?') + 'callback='+this.config.callbacker;
-		};
-		DataGetter.prototype.send = function(){
-			this.tmpScriptNode = Y.net.loadScript(this.config.url, function(){
-			}, this.config);
-		};
-		DataGetter.prototype.onError = function(){};
-		DataGetter.prototype.onResponse = function(){};
-
-		net.DataGetter = DataGetter;
-
-		net.loadData = function(url, callback){
-			var config = {url:url};
-			var gd = new DataGetter(config);
-				gd.onResponse = callback || Y.emptyFn;
-				gd.send();
-		};
-	})(Y.net);
 
 	/**
-	 * 构造请求字符串
-	 * @deprecated 当前params仅支持一层结构
-	 * @param {Mix} objParam
+	 * 合并后台cgi请求url
+	 * @deprecated 该方法不支持前台文件hash链接生成，如果要
+	 * @param {string} url
+	 * @param {mix} get1
+	 * @param {mix} get2...
 	 * @return {String}
-	**/
-	Y.net.buildParam = function(){
+	 */
+	Y.net.buildParam = function(/**params1, params2...*/){
 		var fixType = function(val){
 			return typeof(val) == 'string' || typeof(val) == 'number';
 		};
-		var data = [];
-		Y.lang.each(arguments, function(params){
+		var args = Y.lang.toArray(arguments), data = [];
+
+		Y.lang.each(args, function(params){
 			if(Y.lang.isArray(params)){
-				Y.lang.each(params, function(item){
-					if(fixType(item)){
-						data.push(item);
-					}
-				});
+				data.push(params.join('&'));
 			} else if(typeof(params) == 'object'){
 				for(var i in params){
 					if(fixType(params[i])){
-						data.push(i+'='+params[i]);
+						data.push(i+'='+encodeURIComponent(params[i]));
 					}
 				}
-			} else {
-				return params;
+			} else if(typeof(params) == 'string') {
+				data.push(params);
 			}
 		});
-		return data.join('&');
+		return data.join('&').replace(/^[?|#|&]{0,1}(.*?)[?|#|&]{0,1}$/g, '$1');	//移除头尾的#&?
 	};
 
 	/**
@@ -2244,14 +2330,41 @@
 	 * @param {Mix..} params
 	 * @return {String}
 	 **/
-	Y.net.mergeRequest = function(url /** , params1, params2 **/){
-		var params = Y.lang.toArray(arguments);
-		if(params.length < 2){
-			throw('params count illegle');
-		}
-		var str = Y.net.buildParam(params.slice(1));
-		var url = params[0];
-		return url + (url.indexOf('?') >= 0 ? '&' : '?') + str;
+	Y.net.mergeCgiUri = function(/**url, get1, get2...**/){
+		var args = Y.lang.toArray(arguments);
+		var url = args[0];
+		url = url.replace(/(.*?)[?|#|&]{0,1}$/g, '$1');	//移除尾部的#&?
+		args = args.slice(1);
+		Y.lang.each(args, function(get){
+			var str = Y.net.buildParam(get);
+			if(str){
+				url += (url.indexOf('?') >= 0 ? '&' : '?') + str;
+			}
+		});
+		return url;
+	};
+
+	/**
+	 * 合并cgi请求url
+	 * @deprecated 该方法所生成的前台链接默认使用#hash传参，但如果提供的url里面包含？的话，则会使用queryString传参
+	 * 所以如果需要使用?方式的话，可以在url最后补上?, 如：a.html?
+	 * @param {string} url
+	 * @param {mix} get1
+	 * @param {mix} get2...
+	 * @return {String}
+	 */
+	Y.net.mergeStaticUri = function(/**url, get1, get2...**/){
+		var args = Y.lang.toArray(arguments);
+		var url = args[0];
+		args = args.slice(1);
+		Y.lang.each(args, function(get){
+			var str = Y.net.buildParam(get);
+			if(str){
+				url += /(\?|#|&)$/.test(url) ? '' : (/\?|#|&/.test(url) ? '&' : '#');
+				url += str;
+			}
+		});
+		return url;
 	};
 
 	/**
@@ -2588,294 +2701,4 @@
 	}
 	Y.string = _String;
 })(YSL);
-
-(function(Y){
-	/**
-	 * Tween 算法
-	 * @param {Integer} t current time
-	 * @param {Integer} b begin value
-	 * @param {Integer} c change in value
-	 * @param {Integer} d duration
-	 */
-	var Tween = {
-	    Linear: function(t,b,c,d){ return c*t/d + b; },
-	    Quad: {
-	        easeIn: function(t,b,c,d){
-	            return c*(t/=d)*t + b;
-	        },
-	        easeOut: function(t,b,c,d){
-	            return -c *(t/=d)*(t-2) + b;
-	        },
-	        easeInOut: function(t,b,c,d){
-	            if ((t/=d/2) < 1) return c/2*t*t + b;
-	            return -c/2 * ((--t)*(t-2) - 1) + b;
-	        }
-	    },
-	    Cubic: {
-	        easeIn: function(t,b,c,d){
-	            return c*(t/=d)*t*t + b;
-	        },
-	        easeOut: function(t,b,c,d){
-	            return c*((t=t/d-1)*t*t + 1) + b;
-	        },
-	        easeInOut: function(t,b,c,d){
-	            if ((t/=d/2) < 1) return c/2*t*t*t + b;
-	            return c/2*((t-=2)*t*t + 2) + b;
-	        }
-	    },
-	    Quart: {
-	        easeIn: function(t,b,c,d){
-	            return c*(t/=d)*t*t*t + b;
-	        },
-	        easeOut: function(t,b,c,d){
-	            return -c * ((t=t/d-1)*t*t*t - 1) + b;
-	        },
-	        easeInOut: function(t,b,c,d){
-	            if ((t/=d/2) < 1) return c/2*t*t*t*t + b;
-	            return -c/2 * ((t-=2)*t*t*t - 2) + b;
-	        }
-	    },
-	    Quint: {
-	        easeIn: function(t,b,c,d){
-	            return c*(t/=d)*t*t*t*t + b;
-	        },
-	        easeOut: function(t,b,c,d){
-	            return c*((t=t/d-1)*t*t*t*t + 1) + b;
-	        },
-	        easeInOut: function(t,b,c,d){
-	            if ((t/=d/2) < 1) return c/2*t*t*t*t*t + b;
-	            return c/2*((t-=2)*t*t*t*t + 2) + b;
-	        }
-	    },
-	    Sine: {
-	        easeIn: function(t,b,c,d){
-	            return -c * Math.cos(t/d * (Math.PI/2)) + c + b;
-	        },
-	        easeOut: function(t,b,c,d){
-	            return c * Math.sin(t/d * (Math.PI/2)) + b;
-	        },
-	        easeInOut: function(t,b,c,d){
-	            return -c/2 * (Math.cos(Math.PI*t/d) - 1) + b;
-	        }
-	    },
-	    Expo: {
-	        easeIn: function(t,b,c,d){
-	            return (t==0) ? b : c * Math.pow(2, 10 * (t/d - 1)) + b;
-	        },
-	        easeOut: function(t,b,c,d){
-	            return (t==d) ? b+c : c * (-Math.pow(2, -10 * t/d) + 1) + b;
-	        },
-	        easeInOut: function(t,b,c,d){
-	            if (t==0) return b;
-	            if (t==d) return b+c;
-	            if ((t/=d/2) < 1) return c/2 * Math.pow(2, 10 * (t - 1)) + b;
-	            return c/2 * (-Math.pow(2, -10 * --t) + 2) + b;
-	        }
-	    },
-	    Circ: {
-	        easeIn: function(t,b,c,d){
-	            return -c * (Math.sqrt(1 - (t/=d)*t) - 1) + b;
-	        },
-	        easeOut: function(t,b,c,d){
-	            return c * Math.sqrt(1 - (t=t/d-1)*t) + b;
-	        },
-	        easeInOut: function(t,b,c,d){
-	            if ((t/=d/2) < 1) return -c/2 * (Math.sqrt(1 - t*t) - 1) + b;
-	            return c/2 * (Math.sqrt(1 - (t-=2)*t) + 1) + b;
-	        }
-	    },
-	    Elastic: {
-	        easeIn: function(t,b,c,d,a,p){
-	            if (t==0) return b;  if ((t/=d)==1) return b+c;  if (!p) p=d*.3;
-	            if (!a || a < Math.abs(c)) { a=c; var s=p/4; }
-	            else var s = p/(2*Math.PI) * Math.asin (c/a);
-	            return -(a*Math.pow(2,10*(t-=1)) * Math.sin( (t*d-s)*(2*Math.PI)/p )) + b;
-	        },
-	        easeOut: function(t,b,c,d,a,p){
-	            if (t==0) return b;  if ((t/=d)==1) return b+c;  if (!p) p=d*.3;
-	            if (!a || a < Math.abs(c)) { a=c; var s=p/4; }
-	            else var s = p/(2*Math.PI) * Math.asin (c/a);
-	            return (a*Math.pow(2,-10*t) * Math.sin( (t*d-s)*(2*Math.PI)/p ) + c + b);
-	        },
-	        easeInOut: function(t,b,c,d,a,p){
-	            if (t==0) return b;  if ((t/=d/2)==2) return b+c;  if (!p) p=d*(.3*1.5);
-	            if (!a || a < Math.abs(c)) { a=c; var s=p/4; }
-	            else var s = p/(2*Math.PI) * Math.asin (c/a);
-	            if (t < 1) return -.5*(a*Math.pow(2,10*(t-=1)) * Math.sin( (t*d-s)*(2*Math.PI)/p )) + b;
-	            return a*Math.pow(2,-10*(t-=1)) * Math.sin( (t*d-s)*(2*Math.PI)/p )*.5 + c + b;
-	        }
-	    },
-	    Back: {
-	        easeIn: function(t,b,c,d,s){
-	            if (s == undefined) s = 1.70158;
-	            return c*(t/=d)*t*((s+1)*t - s) + b;
-	        },
-	        easeOut: function(t,b,c,d,s){
-	            if (s == undefined) s = 1.70158;
-	            return c*((t=t/d-1)*t*((s+1)*t + s) + 1) + b;
-	        },
-	        easeInOut: function(t,b,c,d,s){
-	            if (s == undefined) s = 1.70158;
-	            if ((t/=d/2) < 1) return c/2*(t*t*(((s*=(1.525))+1)*t - s)) + b;
-	            return c/2*((t-=2)*t*(((s*=(1.525))+1)*t + s) + 2) + b;
-	        }
-	    },
-	    Bounce: {
-	        easeIn: function(t,b,c,d){
-	            return c - Tween.Bounce.easeOut(d-t, 0, c, d) + b;
-	        },
-	        easeOut: function(t,b,c,d){
-	            if ((t/=d) < (1/2.75)) {
-	                return c*(7.5625*t*t) + b;
-	            } else if (t < (2/2.75)) {
-	                return c*(7.5625*(t-=(1.5/2.75))*t + .75) + b;
-	            } else if (t < (2.5/2.75)) {
-	                return c*(7.5625*(t-=(2.25/2.75))*t + .9375) + b;
-	            } else {
-	                return c*(7.5625*(t-=(2.625/2.75))*t + .984375) + b;
-	            }
-	        },
-	        easeInOut: function(t,b,c,d){
-	            if (t < d/2) return Tween.Bounce.easeIn(t*2, 0, c, d) * .5 + b;
-	            else return Tween.Bounce.easeOut(t*2-d, 0, c, d) * .5 + c*.5 + b;
-	        }
-	    }
-	};
-
-	Y.widget.Tween = Tween;
-})(YSL);
-YSL.use('widget.Tween', function(Y){
-	var SUPPORT_PROS_REG = /^(left|top|right|bottom|width|height|margin|padding|spacing|backgroundx|backgroundy)$/i;
-	var STEP_FREQ = {
-		'veryslow': 8,
-		'slow': 2,
-		'normal': 1,
-		'fast': 0.5,
-		'veryfast': 0.25
-	};
-
-	/**
-	 * 简单动画库
-	 * @param {Mix} tag
-	 * @param {Object} config
-	**/
-	var Animate = function(tag, config){
-		var _this = this;
-		this.target = Y.dom.one(tag);
-		this.config = Y.object.extend(true, {
-			interval: 15,
-			tween: 'Elastic.easeOut',
-			from: {},
-			to: {},
-			speed: 'veryslow',
-			step: null
-		}, config);
-
-		this.status = 0;	//0,1,2,3 normal, runing, pausing, finish
-		this._t = 0;
-		this._timer;
-
-		this.onStart = this.onRuning = this.onPause = this.onResume = this.onFinish = Y.emptyFn;
-		this.config.speed = this.config.speed.toLowerCase();
-
-		if(Y.lang.isString(this.config.tween)){
-			this.config.tween = Y.object.route(Y.widget.Tween, this.config.tween);
-		}
-
-		if(typeof(this.config.tween) != 'function' || !this.target){
-			throw('PARAM ERROR IN ANIMATE');
-		}
-
-		Y.lang.each(this.config.to, function(val, key){
-			if(SUPPORT_PROS_REG.test(key)){
-				_this.config.from[key] = parseInt(_this.target.getStyle(key), 10);
-				if(!_this.config.step){
-					var f = Math.abs(Math.ceil((_this.config.to[key] - _this.config.from[key])/_this.config.interval));
-					_this.config.step = Math.ceil(f*STEP_FREQ[_this.config.speed]);
-				}
-			}
-		});
-	};
-
-	/**
-	 * 运行
-	**/
-	Animate.prototype._run = function(){
-		var _this = this;
-		var b, c, d=this.config.step;
-		var _run = function(){
-			if(_this.status == 1){
-				var newStyle = {};
-				Y.lang.each(_this.config.to, function(item, key){
-					c = item - _this.config.from[key];
-					newStyle[key] = _this.config.tween(_this._t, _this.config.from[key], c, d);
-				});
-				_this.target.setStyle(newStyle);
-				if(_this._t++ < d){
-					_this.onRuning(_this._t);
-					_this._timer = setTimeout(_run, _this.config.interval);
-				} else {
-					_this.onFinish();
-					_this.status = 3;
-				}
-			}
-		};
-		_run();
-	};
-
-	/**
-	 * 从初始状态开始
-	**/
-	Animate.prototype.start = function(){
-		this.onStart();
-		this.reset();
-		this.status = 1;
-		this._run();
-	};
-
-	/**
-	 * 重设到初始态
-	**/
-	Animate.prototype.reset = function(){
-		this.status = 0;
-		this._t = 0;
-		clearTimeout(this._timer);
-		this.target.setStyle(this.config.from);
-	};
-
-	/**
-	 * 停止动画
-	 * @deprecate 与重设同样处理
-	**/
-	Animate.prototype.stop = function(){
-		this.reset();
-	};
-
-	/**
-	 * 暂停动画
-	 * @deprecate 只有在动画运行中有效
-	**/
-	Animate.prototype.pause = function(){
-		if(this.status == 1){
-			this.status = 2;
-			this.onPause();
-		}
-	};
-
-	/**
-	 * 恢复动画
-	 * @deprecate 只有在动画暂停中有效
-	**/
-	Animate.prototype.resume = function(){
-		if(this.status == 2){
-			this.status = 1;
-			this._run();
-			this.onResume();
-		}
-	};
-
-	console.log('Y.widget.Animate', Animate);
-
-	Y.widget.Animate = Animate;
-});
 

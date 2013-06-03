@@ -7,16 +7,19 @@
 (function(Y){
 	Y.dom = {};
 
+	var PROP_KEYS = /^(scrollTop|scrollLeft)$/i;
+
 	/**
 	 * get scroll top
 	 * @return {Object}
 	 */
 	Y.dom.getScroll= function(){
+		var DE = Y.D.documentElement, BD = Y.D.body;
 		return {
-			top: Math.max(Y.D.documentElement.scrollTop, Y.D.body.scrollTop),
-			left: Math.max(Y.D.documentElement.scrollLeft, Y.D.body.scrollLeft),
-			height: Math.max(Y.D.documentElement.scrollHeight, Y.D.body.scrollHeight),
-			width: Math.max(Y.D.documentElement.scrollWidth, Y.D.body.scrollWidth)
+			top: Math.max(DE.scrollTop, BD.scrollTop),
+			left: Math.max(DE.scrollLeft, BD.scrollLeft),
+			height: Math.max(DE.scrollHeight, BD.scrollHeight),
+			width: Math.max(DE.scrollWidth, BD.scrollWidth)
 		};
 	}
 
@@ -28,7 +31,7 @@
 	 * @deprecate Y.dom.insertStyleSheet('* {margin:0;}');
 	 */
 	Y.dom.insertStyleSheet = function (rules, styleSheetID) {
-		styleSheetID = styleSheetID || 'css_'+Math.random();
+		styleSheetID = styleSheetID || Y.guid();
 		var node = Y.dom.one('#'+styleSheetID);
 		if(!node){
 			node = Y.dom.one('head').create('style').setAttr({id:styleSheetID, type:'text/css'});
@@ -99,35 +102,65 @@
 	}
 
 	/**
+	 * 检测两个节点是否相同
+	 **/
+	_DOM.prototype.equal = function(tag){
+		return tag && this.getDomNode() == tag.getDomNode();
+	};
+
+	/**
 	 * add css class
 	 * @param {String} cls
 	 * @return {Object}
 	 */
-	_DOM.prototype.addClass = function(cls){
-		this.getDomNode().className += !this.existClass(cls) ? (' ' + cls) : '';
+	_DOM.prototype.addClass = function(cs){
+		var tmp = [], _this = this;
+		Y.lang.each(cs.split(' '), function(c){
+			if(Y.string.trim(c) && !_this.existClass(c)){
+				tmp.push(c);
+			}
+		});
+		if(tmp.length){
+			this.getDomNode().className += ' ' + tmp.join(' ');
+		}
 		return this;
 	}
 
 	/**
-	 * check exist css class
-	 * @param {String} cls
+	 * check exist css classes
+	 * @param {String} cs
 	 * @return {Boolean}
 	 */
-	_DOM.prototype.existClass = function(cls){
-		var e = new RegExp('(\\s|^)' + cls + '(\\s|$)').test(this.getDomNode().className);
-		return e;
+	_DOM.prototype.existClass = function(cs){
+		var exist = true;
+		var cc = this.getDomNode().className;
+		Y.lang.each(cs.split(' '), function(c){
+			c = Y.string.trim(c);
+			if(c && !(new RegExp('(\\s|^)' + c + '(\\s|$)')).test(cc)){
+				exist = false;
+				return false;
+			}
+		});
+		return exist;
 	}
 
 	/**
-	 * remove css class
+	 * remove css classes
 	 * @param {String} cls
 	 * @return {Object}
 	 */
-	_DOM.prototype.removeClass = function(cls){
-		if(this.existClass(cls)){
-			var reg = new RegExp('(\\s|^)' + cls + '(\\s|$)');
-            this.getDomNode().className = this.getDomNode().className.replace(reg, ' ');
-		}
+	_DOM.prototype.removeClass = function(cs){
+		var n = this.getDomNode(),
+			cc = n.className,
+			_this = this;
+		Y.lang.each(cs.split(' '), function(c){
+			c = Y.string.trim(c);
+			if(_this.existClass(c)){
+				var reg = new RegExp('(\\s|^)' + c + '(\\s|$)');
+				cc = cc.replace(c, '');
+			}
+		});
+		n.className = cc;
 		return this;
 	}
 
@@ -138,6 +171,7 @@
 	 * @return {Boolean} toggle result
 	 */
 	_DOM.prototype.toggleClass = function(cls1, cls2){
+		cls2 = cls2 || '';
 		if(this.existClass(cls1)){
 			this.removeClass(cls1).addClass(cls2);
 			return true;
@@ -188,7 +222,11 @@
 	 * @return {String}
 	 */
 	_DOM.prototype.getAttr = function(a){
-		return this.getDomNode().getAttribute(a);
+		var n = this.getDomNode();
+		if(PROP_KEYS.test(a)){
+			return n[a];
+		}
+		return n.getAttribute(a);
 	}
 
 	/**
@@ -198,11 +236,22 @@
 	 * @return {Object}
 	 */
 	_DOM.prototype.setAttr = function(a, v){
+		var n = this.getDomNode();
 		if(typeof(a) == 'string'){
-			this.getDomNode().setAttribute(a, v);
+			if(PROP_KEYS.test(a)){
+				n[a] = v;
+			} else {
+				n.setAttribute(a, v);
+			}
 		} else {
 			for(var i in a){
-				this.getDomNode().setAttribute(i, a[i]);
+				try {
+					if(PROP_KEYS.test(i)){
+						n[i] = a[i];
+					} else {
+						n.setAttribute(i, a[i]);
+					}
+				} catch(ex){}
 			}
 		}
 		return this;
@@ -391,9 +440,15 @@
 
 	/**
 	 * relocation to parent node
-	 * @param {Function} fn
+	 * @param mix mix tagName || function
+	 * @return mix
 	 */
 	_DOM.prototype.parent = function(mix){
+		var node = this.getDomNode();
+		if(!node){
+			return null;
+		}
+
 		var fn;
 		if(typeof(mix) == 'string'){
 			fn = function(n){
@@ -402,19 +457,19 @@
 		} else if(mix){
 			fn = mix;
 		} else {
-			return new _DOM(Y.getDomNode().parentNode);
+			return node.parentNode ? new _DOM(node.parentNode) : null;
 		}
 		var result;
-		var p = this.getDomNode().parentNode;
+		var p = node.parentNode;
 		if(fn){
-			while(p && p.parentNode){
+			while(p && p.parentNode && p.parentNode.nodeType != 9){
 				if(fn(p)){
 					return new _DOM(p);
 				}
 				p = p.parentNode;
 			}
 		} else {
-			return new _DOM(p);
+			return p ? new _DOM(p) : null;
 		}
 	};
 
@@ -488,17 +543,19 @@
 
 	/**
 	 * get region info
-	 * @return {Object}
+	 * @param string key
+	 * @return {mix}
 	 */
-	_DOM.prototype.getRegion = function(){
+	_DOM.prototype.getRegion = function(key){
 		var pos = this.getPosition(),
 			size = this.getSize();
-		return {
+		var reg = {
 			left: pos.left,
 			top: pos.top,
 			width: size.width,
 			height: size.height
-		}
+		};
+		return key ? reg[key] : reg;
 	}
 
 	/**
@@ -549,15 +606,36 @@
 	 * @param {Integer} pos position(0,...-1)
 	 * @return {Object} node
 	 */
-	_DOM.prototype.create = function(tp, pos){
+	_DOM.prototype.create = function(tp, pos, pp){
 		var p = (this.getDomNode() || Y.D.body);
 		p = p.nodeType == 9 ? p = p.body : p;
 
-		pos = (pos === undefined) ? -1 : parseInt(pos,10);
+		pos = (pos === undefined) ? -1 : parseInt(pos,10) || 0;
 		var n = typeof(tp) == 'string' ? Y.D.createElement(tp) : tp;
-		pos == -1 ? p.appendChild(n) : p.insertBefore(n, p.childNodes[pos]);
-		return new _DOM(n);
+		if(pos == -1){
+			p.appendChild(n);
+		} else {
+			p.insertBefore(n, p.childNodes[pos]);
+		}
+		var d = new _DOM(n);
+		if(pp){
+			d.setAttr(pp);
+		}
+		return d;
 	}
+
+	/**
+	 * batch append children
+	 * @param DOM n
+	 */
+	_DOM.prototype.append = function(children){
+		var result;
+		var p = this.getDomNode();
+		this.all(children).each(function(child){
+			p.appendChild(child.getDomNode());
+		});
+		return result;
+	};
 
 	/**
 	 * get children nodes
@@ -609,6 +687,9 @@
 	_DOM.prototype.contains = function(b){
 		var a = this.getDomNode(),
 			b = b.getDomNode ? b.getDomNode() : b;
+		if(b.nodeType == 9){
+			return false;
+		}
 		return a.contains ? a != b && a.contains(b) : !!(a.compareDocumentPosition(b) & 16);
 	}
 
@@ -620,6 +701,9 @@
 	 * @return {Object|Null}
 	 */
 	_DOM.prototype.one = function(selector, context, cond){
+		if(!selector){
+			return null;
+		}
 		var context = context || this.getDomNode();
 		if(typeof(selector) !== 'string'){
 			return selector.getOneDomNode ? selector.getOneDomNode() : (selector.getDomNode ? selector : new _DOM(selector));
@@ -636,6 +720,9 @@
 	 * @return {Object}
 	 */
 	_DOM.prototype.all = function(selector, context, cond) {
+		if(!selector){
+			return new _DOMCollection([]);
+		}
 		if(typeof(selector) !== 'string'){
 			return selector.getOneDomNode ? selector : (selector.getDomNode ? new _DOMCollection([selector.getDomNode()]) : new _DOM(selector));
 		}
@@ -649,7 +736,6 @@
 	 * extend event method
 	 */
 	var eventMapHash = {
-		'addEvent': 'add',
 		'removeEvent': 'remove',
 		'on': 'add',
 		'delegate': 'delegate'

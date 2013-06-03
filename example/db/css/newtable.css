@@ -1,0 +1,6 @@
+body {color:#555;}
+form {padding:2px 5px;}
+fieldset {padding-top:5px;}
+.tbl {border:1px solid #ddd; width:100%;}
+.tbl tr {border-bottom:1px solid #ddd}
+.tbl th {border-left:1px solid #ddd;}

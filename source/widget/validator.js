@@ -44,7 +44,7 @@
 			onError: function(item, errs){
 				var err = errs[0];
 				var pn = Y.dom.one(item.parentNode);
-				var span = pn.one('span.msg') || pn.create('span').addClass('msg');
+				var span = pn.one('span.msg') || pn.create('span', -1).addClass('msg');
 				span.addClass('error').removeClass('pass').setHtml(err);
 			},
 			resetError: function(form){
@@ -145,8 +145,21 @@
 			var val = element.value.replace(REGEXP_COLLECTION.TRIM, '');
 			for(var key in rules){
 				var uKey = key.toUpperCase();
+
+                //函数模式
+                if(typeof(rules[key]) == 'function'){
+                    var ret = rules[key](val, element);
+                    if(ret){
+                        if(!checkAllRules){
+                            return [ret];
+                        } else {
+                            errors.push(ret);
+                        }
+                    }
+                }
+
 				//正则表命中
-				if(REGEXP_COLLECTION[uKey]){
+				else if(REGEXP_COLLECTION[uKey]){
 					if(!REGEXP_COLLECTION[uKey].test(val)){
 						if(!checkAllRules){
 							return [rules[key]];
@@ -192,17 +205,6 @@
 					}
 				}
 
-				//函数模式
-				else if(typeof(rules[key]) == 'function'){
-					var ret = rules[key](val);
-					if(ret){
-						if(!checkAllRules){
-							return [ret];
-						} else {
-							errors.push(ret);
-						}
-					}
-				}
 			}
 		}
 
@@ -249,5 +251,7 @@
 		}
 		return false;
 	}
+
+	Validator.REGS = REGEXP_COLLECTION;
 	Y.widget.Validator = Validator;
 })(YSL);

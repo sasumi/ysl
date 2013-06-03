@@ -1,0 +1,35 @@
+html {background:url('../img/canvas_bg.png')}
+
+.db-table {top:10px; left:290px; min-width:120px;}
+.db-table {position:absolute; border:1px solid #aaa; border-bottom:5px solid #98bfda; border-radius:5px; background-color:white; box-shadow:0px 1px 3px gray;}
+.db-table-hd {background:url('../img/fam/application_view_list.png') no-repeat 3px 4px #98bfda; font-weight:bold; padding:1px 4px 1px 22px}
+.db-table-con dt {padding-left:5px; background-color:#c5c5c5; border-top:1px solid #aaa; border-bottom:1px solid #aaa;}
+.db-table-con dd {background:url('../img/key_icon.png') no-repeat 3px -64px; padding:1px 0 1px 16px; height:20px; overflow:hidden; color:#444;}
+.db-table-con dd.db-pk {background-position:3px 1px;}
+.db-table-con dd.db-fk {background-position:3px -21px;}
+.db-table-con dd.db-nn {background-position:3px -42px;}
+.db-table-indexes dd {background:none; padding-left:5px}
+
+.db-tools {width:57px; position:absolute; border-top:10px solid #777; border-bottom:3px solid #777; border-radius:3px; background-color:#eee; padding:3px 3px 3px 4px; box-shadow:0px 1px 3px gray;}
+.db-table-active {box-shadow:0px 0px 5px red;}
+.db-tools-min {width:29px;}
+.db-tools dt {height:0px; overflow:hidden; display:block; width:100%; border-top:1px solid #ddd; border-bottom:1px solid white;}
+.db-tools dd {float:left; padding:4px; cursor:pointer; border-radius:3px;}
+.db-tools dd:hover {background-color:#ddd; }
+.db-tools dd.active {background-color:white; }
+.tool-icon {display:inline-block; width:20px; height:20px; background-repeat:no-repeat; background-position:50%}
+
+.tool-icon-open {background-image:url("../img/fam/folder.png")}
+.tool-icon-save {background-image:url("../img/fam/disk.png")}
+.tool-icon-new {background-image:url("../img/fam/table_add.png")}
+.tool-icon-cursor {background-image:url("../img/fam/cursor.png")}
+.tool-icon-lock {background-image:url("../img/fam/lock.png")}
+.tool-icon-selectall {background-image:url("../img/fam/shape_ungroup.png")}
+
+.tool-icon-tile {background-image:url("../img/fam/application_view_tile.png")}
+.tool-icon-cascade {background-image:url("../img/fam/application_cascade.png")}
+.tool-icon-tile-horizontal {background-image:url("../img/fam/application_tile_horizontal.png")}
+.tool-icon-tile-vertical {background-image:url("../img/fam/application_tile_vertical.png")}
+
+.tool-icon-zoomin {background-image:url("../img/fam/magifier_zoom_out.png")}
+.tool-icon-zoomout {background-image:url("../img/fam/magnifier_zoom_in.png")}

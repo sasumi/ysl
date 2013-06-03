@@ -156,74 +156,36 @@
 	})();
 
 	/**
-	 * flash请求组件
-	 * @deprecated 需要在服务器部署crossdomain.xml
+	 * get 数据
+	 * @param string url
+	 * @param object data
+	 * @param Function callback
+	 * @param object option
+	**/
+	Y.net.get = function(url, data, callback, option){
+		callback = callback || Y.emptyFn;
+		option = Y.object.extend(true, {url:url}, option || {});
+		option.method = 'get';
+		var ajax = new Y.net.Ajax(option);
+		ajax.onResponse = callback;
+		ajax.send();
+	};
+
+	/**
+	 * post 数据
+	 * @param string url
+	 * @param object data
+	 * @param Function callback
+	 * @param object option
 	 **/
-	Y.net.flashSender = (function(){
-		var GUID = 0;
-		var FLASHSENDER_ID = '';
-		var FLASHSENDER_OBJ = '';
-		var FLASHSENDER_SRC = '';
-		var FLASHSENDER_READY;
-		var FLASHSENDER_INIT_CALLBACK_METHOD = 'FLASHSENDER_INIT_CALLBACK';
-		var FLASHSENDER_CALLBACK_METHOD = 'FLASHSENDER_CALLBACK';
-		var FLASHSENDER_CALLBACK_LIST = {};
-
-		/**
-		 * flash初始化状态回调标记
-		 **/
-		Y.W[FLASHSENDER_INIT_CALLBACK_METHOD] = function(){
-			FLASHSENDER_READY = true;
-			delete(Y.W[FLASHSENDER_INIT_CALLBACK_METHOD]);
-		};
-
-		/**
-		 * flash响应回调
-		 * @param {Object} params
-		 **/
-		Y.W[FLASHSENDER_CALLBACK_METHOD] = function(params){
-			if(!params || !params.guid || !params.data){
-				console.log('FLAHSSENDER ERROR', params);
-				return;
-			}
-
-			if(FLASHSENDER_CALLBACK_LIST[params.guid]){
-				FLASHSENDER_CALLBACK_LIST[params.guid](params.data);
-				delete(FLASHSENDER_CALLBACK_LIST[params.guid]);
-			}
-		};
-
-		var sender = function(config){
-			this.config = Y.object.extend(true, {
-				url: '',
-				method: 'get',
-				data: {},
-				cache: false,
-				format: 'json',
-				guid: ++GUID
-			}, config);
-		};
-		sender.initialize = function(){
-			if(FLASHSENDER_READY){
-				return;
-			} else {
-				Y.use('media', function(){
-					//Y.media.insertFlash();
-
-				});
-			}
-		};
-
-		sender.prototype.onResponse = function(data){
-
-		};
-
-		sender.prototype.send = function(){
-
-		};
-
-		return sender;
-	})();
+	Y.net.post = function(url, data, callback, option){
+		callback = callback || Y.emptyFn;
+		option = Y.object.extend(true, {url:url}, option || {});
+		option.method = 'post';
+		var ajax = new Y.net.Ajax(option);
+		ajax.onResponse = callback;
+		ajax.send();
+	};
 
 	/**
 	 * 加载css样式表
@@ -404,81 +366,35 @@
 		Y.net.loadScript = loadScript;
 	})(Y.net);
 
-	/**
-	 * data getter
-	 **/
-	(function(net){
-		var GUID = 0;
-		var DataGetter = function(config){
-			var _this = this;
-			this.config = Y.object.extend(true, {
-				url: null,
-				callbacker: 'DataGetterCallback'+(GUID++)
-			}, config);
-
-			Y.W[this.config.callbacker] = function(data){
-				if(!data){
-					_this.onError();
-				} else {
-					_this.onResponse(data);
-				}
-				Y.W[_this.config.callbacker] = null;
-				if(_this.tmpScriptNode){
-					_this.tmpScriptNode.parentNode.removeChild(_this.tmpScriptNode);
-				}
-			};
-
-			if(!this.config.url){
-				throw('DATA GETTER PARAM ERROR');
-			}
-			this.config.url += (this.config.url.indexOf('?')>0 ? '&' : '?') + 'callback='+this.config.callbacker;
-		};
-		DataGetter.prototype.send = function(){
-			this.tmpScriptNode = Y.net.loadScript(this.config.url, function(){
-			}, this.config);
-		};
-		DataGetter.prototype.onError = function(){};
-		DataGetter.prototype.onResponse = function(){};
-
-		net.DataGetter = DataGetter;
-
-		net.loadData = function(url, callback){
-			var config = {url:url};
-			var gd = new DataGetter(config);
-				gd.onResponse = callback || Y.emptyFn;
-				gd.send();
-		};
-	})(Y.net);
 
 	/**
-	 * 构造请求字符串
-	 * @deprecated 当前params仅支持一层结构
-	 * @param {Mix} objParam
+	 * 合并后台cgi请求url
+	 * @deprecated 该方法不支持前台文件hash链接生成，如果要
+	 * @param {string} url
+	 * @param {mix} get1
+	 * @param {mix} get2...
 	 * @return {String}
-	**/
-	Y.net.buildParam = function(){
+	 */
+	Y.net.buildParam = function(/**params1, params2...*/){
 		var fixType = function(val){
 			return typeof(val) == 'string' || typeof(val) == 'number';
 		};
-		var data = [];
-		Y.lang.each(arguments, function(params){
+		var args = Y.lang.toArray(arguments), data = [];
+
+		Y.lang.each(args, function(params){
 			if(Y.lang.isArray(params)){
-				Y.lang.each(params, function(item){
-					if(fixType(item)){
-						data.push(item);
-					}
-				});
+				data.push(params.join('&'));
 			} else if(typeof(params) == 'object'){
 				for(var i in params){
 					if(fixType(params[i])){
-						data.push(i+'='+params[i]);
+						data.push(i+'='+encodeURIComponent(params[i]));
 					}
 				}
-			} else {
-				return params;
+			} else if(typeof(params) == 'string') {
+				data.push(params);
 			}
 		});
-		return data.join('&');
+		return data.join('&').replace(/^[?|#|&]{0,1}(.*?)[?|#|&]{0,1}$/g, '$1');	//移除头尾的#&?
 	};
 
 	/**
@@ -487,14 +403,41 @@
 	 * @param {Mix..} params
 	 * @return {String}
 	 **/
-	Y.net.mergeRequest = function(url /** , params1, params2 **/){
-		var params = Y.lang.toArray(arguments);
-		if(params.length < 2){
-			throw('params count illegle');
-		}
-		var str = Y.net.buildParam(params.slice(1));
-		var url = params[0];
-		return url + (url.indexOf('?') >= 0 ? '&' : '?') + str;
+	Y.net.mergeCgiUri = function(/**url, get1, get2...**/){
+		var args = Y.lang.toArray(arguments);
+		var url = args[0];
+		url = url.replace(/(.*?)[?|#|&]{0,1}$/g, '$1');	//移除尾部的#&?
+		args = args.slice(1);
+		Y.lang.each(args, function(get){
+			var str = Y.net.buildParam(get);
+			if(str){
+				url += (url.indexOf('?') >= 0 ? '&' : '?') + str;
+			}
+		});
+		return url;
+	};
+
+	/**
+	 * 合并cgi请求url
+	 * @deprecated 该方法所生成的前台链接默认使用#hash传参，但如果提供的url里面包含？的话，则会使用queryString传参
+	 * 所以如果需要使用?方式的话，可以在url最后补上?, 如：a.html?
+	 * @param {string} url
+	 * @param {mix} get1
+	 * @param {mix} get2...
+	 * @return {String}
+	 */
+	Y.net.mergeStaticUri = function(/**url, get1, get2...**/){
+		var args = Y.lang.toArray(arguments);
+		var url = args[0];
+		args = args.slice(1);
+		Y.lang.each(args, function(get){
+			var str = Y.net.buildParam(get);
+			if(str){
+				url += /(\?|#|&)$/.test(url) ? '' : (/\?|#|&/.test(url) ? '&' : '#');
+				url += str;
+			}
+		});
+		return url;
 	};
 
 	/**

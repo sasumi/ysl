@@ -1,11 +1,36 @@
 (function(Y){
+	/**
+	 * 特殊对象直接命中
+	 * @param  {string} selector
+	 * @return {[type]}          [description]
+	 */
+	var _fix = function(selector){
+		selector = selector.toLowerCase();
+		if(/^(body|head|html)$/.test(selector)){
+			return Y.D.getElementsByTagName(selector)[0];
+		} else if(selector == 'window'){
+			return Y.W;
+		} else if(selector == 'document'){
+			return Y.D;
+		}
+		return '';
+	}
+
 	//使用浏览器原生selector
 	if(Y.D.querySelector && Y.D.querySelectorAll){
 		Y.querySelector = function(selector, context){
+			var sp = _fix(selector);
+			if(sp){
+				return sp;
+			}
 			var dom = context || Y.D;
 			return dom.querySelector(selector);
 		};
 		Y.querySelectorAll = function(selector, context){
+			var sp = _fix(selector);
+			if(sp){
+				return sp;
+			}
 			var dom = context || Y.D;
 			return dom.querySelectorAll(selector);
 		};
@@ -153,12 +178,20 @@
 		return result_lst;
 	};
 
-	Y.querySelector = function(){
+	Y.querySelector = function(selector){
+		var sp = _fix(selector);
+		if(sp){
+			return sp;
+		}
 		var arr = getElement.apply(null, arguments)[0];
 		return arr;
 	};
 
-	Y.querySelectorAll = function(){
+	Y.querySelectorAll = function(selector){
+		var sp = _fix(selector);
+		if(sp){
+			return [sp];
+		}
 		return getElement.apply(null, arguments);
 	}
 })(YSL);

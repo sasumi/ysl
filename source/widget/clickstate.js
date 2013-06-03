@@ -69,7 +69,7 @@ YSL.use('com.cookie', function(Y){
 		if (option.prepare) {
 			var _cache = {};
 			Y.event.on(option.container, option.eventType, function (e) {
-				var _eventTag = Y.event.getTarget(e);
+				var _eventTag = Y.event.getTarget(e).getDomNode();
 				for (var tag in tagHash) {
 					if ((!_cache[tag] && _cache[tag] === undefined) || option.domQueryCache) {
 						_cache[tag] = Y.dom.one(tag, option.container).getDomNode();

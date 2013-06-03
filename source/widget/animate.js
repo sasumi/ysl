@@ -1,5 +1,6 @@
 YSL.use('widget.Tween', function(Y){
-	var SUPPORT_PROS_REG = /^(left|top|right|bottom|width|height|margin|padding|spacing|backgroundx|backgroundy)$/i;
+	var SUPPORT_STYLE = /^(left|top|right|bottom|width|height|margin|padding|spacing|backgroundx|backgroundy)$/i;
+	var SUPPORT_ATTR = /^(scrollTop|scrollLeft)$/i;
 	var STEP_FREQ = {
 		'veryslow': 8,
 		'slow': 2,
@@ -12,6 +13,10 @@ YSL.use('widget.Tween', function(Y){
 	 * 简单动画库
 	 * @param {Mix} tag
 	 * @param {Object} config
+	 * @demo var ani = new Animate(tag, {to:
+	 * 		{scrollTop: 20}
+	 * });
+	 * ani.start();
 	**/
 	var Animate = function(tag, config){
 		var _this = this;
@@ -41,8 +46,10 @@ YSL.use('widget.Tween', function(Y){
 		}
 
 		Y.lang.each(this.config.to, function(val, key){
-			if(SUPPORT_PROS_REG.test(key)){
-				_this.config.from[key] = parseInt(_this.target.getStyle(key), 10);
+			var _s = SUPPORT_STYLE.test(key),
+				_a = SUPPORT_ATTR.test(key);
+			if(_s || _a){
+				_this.config.from[key] = parseInt(_this.target[_s ? 'getStyle' : 'getAttr'](key), 10);
 				if(!_this.config.step){
 					var f = Math.abs(Math.ceil((_this.config.to[key] - _this.config.from[key])/_this.config.interval));
 					_this.config.step = Math.ceil(f*STEP_FREQ[_this.config.speed]);
@@ -60,11 +67,17 @@ YSL.use('widget.Tween', function(Y){
 		var _run = function(){
 			if(_this.status == 1){
 				var newStyle = {};
+				var newAttr = {};
 				Y.lang.each(_this.config.to, function(item, key){
 					c = item - _this.config.from[key];
-					newStyle[key] = _this.config.tween(_this._t, _this.config.from[key], c, d);
+					var tmp = _this.config.tween(_this._t, _this.config.from[key], c, d);
+					tmp = parseInt(tmp, 10);
+					SUPPORT_STYLE.test(key) ? newStyle[key] = tmp : newAttr[key] = tmp;
 				});
+
+				console.log('newStyle', newStyle, newAttr);
 				_this.target.setStyle(newStyle);
+				_this.target.setAttr(newAttr);
 				if(_this._t++ < d){
 					_this.onRuning(_this._t);
 					_this._timer = setTimeout(_run, _this.config.interval);
@@ -94,7 +107,19 @@ YSL.use('widget.Tween', function(Y){
 		this.status = 0;
 		this._t = 0;
 		clearTimeout(this._timer);
-		this.target.setStyle(this.config.from);
+
+		var _s = {},
+			_a = {};
+
+		Y.lang.each(this.config.from, function(val, key){
+			if(SUPPORT_STYLE.test(key)){
+				_s[key] = val;
+			} else if(SUPPORT_ATTR.test(key)){
+				_a[key] = val;
+			}
+		});
+		this.target.setStyle(_s);
+		this.target.setAttr(_a);
 	};
 
 	/**
@@ -127,8 +152,6 @@ YSL.use('widget.Tween', function(Y){
 			this.onResume();
 		}
 	};
-
-	console.log('Y.widget.Animate', Animate);
 
 	Y.widget.Animate = Animate;
 });
