@@ -23,6 +23,9 @@
 			if(sp){
 				return sp;
 			}
+			if(context){
+				context = Y.dom.one(context).getDomNode();
+			}
 			var dom = context || Y.D;
 			return dom.querySelector(selector);
 		};
@@ -30,6 +33,9 @@
 			var sp = _fix(selector);
 			if(sp){
 				return sp;
+			}
+			if(context){
+				context = Y.dom.one(context).getDomNode();
 			}
 			var dom = context || Y.D;
 			return dom.querySelectorAll(selector);
