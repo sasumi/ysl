@@ -116,7 +116,7 @@
 	 **/
 	Y.use = (function(){
 		var CallbackList = [];
-
+		
 		/**
 		 * 转换模块key为模块实体
 		 * @param string modStr
@@ -126,7 +126,7 @@
 			var na = modStr.replace(/^Y\.|^YSL\./i, '');
 			return Y.object.route(Y, na);
 		};
-
+		
 		/**
 		 * 转换模块名称为路径
 		 * @param string modStr
@@ -1063,10 +1063,10 @@
 		 * @param  {DOM} pDom
 		 */
 		delegate: (function(){
-			var check = function(n, selector){
+			var check = function(n, selector, pDom){
 				var found;
-				Y.dom.all(selector).each(function(item){
-					if(item && (item.contains(n) || item.equal(n))){
+				Y.dom.all(selector,pDom).each(function(item){
+					if(item && item.equal(n)){
 						found = item;
 						return false;
 					}
@@ -1081,7 +1081,7 @@
 				this.add(pDom, eventType, function(evt){
 					var n = _this.getTarget(evt);
 					while(n && n.getDomNode().nodeType == 1){
-						if(found = check(n, selector)){
+						if(found = check(n, selector, pDom)){
 							handler.call(found, evt);
 							return;
 						}
@@ -2551,7 +2551,7 @@
 
 (function(Y){
 	var _String = {}
-
+	
 	/**
 	 * convert string to ascii code
 	 * @param {string} str
@@ -2560,9 +2560,9 @@
 	_String.str2asc = function(str){
 		return str.charCodeAt(0).toString(16);
 	};
-
+	
 	/**
-	 * repeat string
+	 * repeat string 
 	 * @param {string} str
 	 * @param {integer} n
 	 * @return {string}
@@ -2573,7 +2573,7 @@
 		}
 		return str;
 	};
-
+	
 	/**
 	 * string trim
 	 * @param {integer} iSide, 0:both, 1:left, 2:right
@@ -2583,14 +2583,14 @@
 		var whitespace, l = 0,
 			i = 0;
 		str += '';
-
+	 
 		if (!charlist) {
 			whitespace = " \n\r\t\f\x0b\xa0\u2000\u2001\u2002\u2003\u2004\u2005\u2006\u2007\u2008\u2009\u200a\u200b\u2028\u2029\u3000";
 		} else {
 			charlist += '';
 			whitespace = charlist.replace(/([\[\]\(\)\.\?\/\*\{\}\+\$\^\:])/g, '$1');
 		}
-
+	 
 		l = str.length;
 		for (i = 0; i < l; i++) {
 			if (whitespace.indexOf(str.charAt(i)) === -1) {
@@ -2598,7 +2598,7 @@
 				break;
 			}
 		}
-
+	 
 		l = str.length;
 		for (i = l - 1; i >= 0; i--) {
 			if (whitespace.indexOf(str.charAt(i)) === -1) {
@@ -2608,7 +2608,7 @@
 		}
 		return whitespace.indexOf(str.charAt(0)) === -1 ? str : '';
 	};
-
+	
 
 	/**
 	 * 解析str到obj
@@ -2627,7 +2627,7 @@
 		return data;
 	};
 
-
+	
 	/**
 	 * remove ubb code
 	 * @param  {string} s source string
@@ -2643,7 +2643,7 @@
         s = s.replace(/\[\/?(b|url|img|flash|video|audio|ftc|ffg|fts|ft|email|center|u|i|marque|m|r|quote)[^\]]*\]/ig, "");
         return s;
     };
-
+	
 	/**
 	 * convert ascii code to str
 	 * @param {string} str

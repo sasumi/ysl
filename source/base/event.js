@@ -368,10 +368,10 @@
 		 * @param  {DOM} pDom
 		 */
 		delegate: (function(){
-			var check = function(n, selector){
+			var check = function(n, selector, pDom){
 				var found;
-				Y.dom.all(selector).each(function(item){
-					if(item && (item.contains(n) || item.equal(n))){
+				Y.dom.all(selector,pDom).each(function(item){
+					if(item && item.equal(n)){
 						found = item;
 						return false;
 					}
@@ -386,7 +386,7 @@
 				this.add(pDom, eventType, function(evt){
 					var n = _this.getTarget(evt);
 					while(n && n.getDomNode().nodeType == 1){
-						if(found = check(n, selector)){
+						if(found = check(n, selector, pDom)){
 							handler.call(found, evt);
 							return;
 						}
