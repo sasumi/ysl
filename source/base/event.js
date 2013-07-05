@@ -370,7 +370,7 @@
 		delegate: (function(){
 			var check = function(n, selector, pDom){
 				var found;
-				Y.dom.all(selector,pDom).each(function(item){
+				Y.dom.all(selector, pDom).each(function(item){
 					if(item && item.equal(n)){
 						found = item;
 						return false;

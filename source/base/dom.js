@@ -142,7 +142,10 @@
 			}
 		});
 		return exist;
-	}
+	};
+
+	//alias
+	_DOM.prototype.hasClass = _DOM.prototype.existClass;
 
 	/**
 	 * remove css classes
@@ -452,7 +455,7 @@
 		var fn;
 		if(typeof(mix) == 'string'){
 			fn = function(n){
-				return n.tagName.toLowerCase() == mix.toLowerCase();
+				return n.getDomNode().tagName.toLowerCase() == mix.toLowerCase();
 			};
 		} else if(mix){
 			fn = mix;
@@ -463,7 +466,7 @@
 		var p = node.parentNode;
 		if(fn){
 			while(p && p.parentNode && p.parentNode.nodeType != 9){
-				if(fn(p)){
+				if(fn(new _DOM(p))){
 					return new _DOM(p);
 				}
 				p = p.parentNode;
@@ -779,6 +782,14 @@
 			ret.push(new _DOM(item));
 		})
 		return ret;
+	};
+
+	/**
+	 * get size
+	 * @return {Number}
+	 */
+	_DOMCollection.prototype.size = function(){
+		return this._nodes.length;
 	};
 
 
