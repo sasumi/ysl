@@ -34,7 +34,7 @@
 				console.log('e ',e.keyCode)
 			});
 			Y.dom.delegate('span', 'click', function(ev){
-				console.log(this.parentNode.id);
+				Y.dom.one('#tx').setValue(this.parent().getDomNode().id);
 			});
 		})(YSL);
 	</script>

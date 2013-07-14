@@ -1,5 +1,5 @@
 (function(Y){
-	Y.dom.one('#btn1').addEvent('click', function(){
+	Y.dom.one('#btn1').on('click', function(){
 		Y.use('widget.Popup', function(Y){
 			var pop = new Y.widget.Popup({
 					title: '普通对话框',
@@ -9,7 +9,7 @@
 		});
 	});
 
-	Y.dom.one('#btn2').addEvent('click', function(){
+	Y.dom.one('#btn2').on('click', function(){
 		Y.use('widget.Popup', function(){
 			var pop = new Y.widget.Popup({
 					title: '页面source引用对话框',
@@ -20,7 +20,7 @@
 		});
 	})
 
-	Y.dom.one('#btn3').addEvent('click', function(){
+	Y.dom.one('#btn3').on('click', function(){
 		Y.use('widget.Popup', function(){
 			var pop = new YSL.widget.Popup({
 					topCloseBtn: false,
@@ -32,7 +32,7 @@
 		});
 	})
 
-	Y.dom.one('#btn4').addEvent('click', function(){
+	Y.dom.one('#btn4').on('click', function(){
 		Y.use('widget.Popup', function(){
 			for(var i=0; i<3; i++){
 				var pop = new YSL.widget.Popup({
@@ -46,7 +46,7 @@
 	})
 
 
-	Y.dom.one('#btn5').addEvent('click', function(){
+	Y.dom.one('#btn5').on('click', function(){
 
 		Y.use('widget.Popup', function(){
 			for(var i=0; i<1; i++){
@@ -73,7 +73,7 @@
 		});
 	})
 
-	Y.dom.one('#btn6').addEvent('click', function(){
+	Y.dom.one('#btn6').on('click', function(){
 		Y.use('widget.Popup', function(){
 			var pop1 = new YSL.widget.Popup({
 					title: '模态对话框1',
@@ -102,7 +102,7 @@
 		});
 	});
 
-	Y.dom.one('#btn7').addEvent('click', function(){
+	Y.dom.one('#btn7').on('click', function(){
 		Y.use('widget.Popup', function(){
 			var pop = new YSL.widget.Popup({
 				title: '自定义按钮',
@@ -118,7 +118,7 @@
 		});
 	})
 
-	Y.dom.one('#btn8').addEvent('click', function(){
+	Y.dom.one('#btn8').on('click', function(){
 		Y.use('widget.Popup', function(){
 			var pop = new YSL.widget.Popup({
 				title: '任意个按钮',
@@ -149,7 +149,7 @@
 		});
 	});
 
-	Y.dom.one('#btn9').addEvent('click', function(){
+	Y.dom.one('#btn9').on('click', function(){
 		Y.use('widget.Popup', function(Y, Pop){
 			var pop = new Pop({
 				title: 'IO demo',
