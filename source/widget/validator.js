@@ -61,27 +61,7 @@
 		if(!this.config.form || !this.config.rules){
 			throw('validate need form & rules');
 		}
-		this.init();
-	};
-
-	/**
-	 * 初始化
-	 */
-	Validator.prototype.init = function(){
-		var _this = this;
-		this.elements = Y.dom.one(this.config.form).getDomNode().elements;
-		Y.dom.one(this.config.form).on('submit', function(){
-			_this.errors = {};
-			_this.config.resetError(_this.config.form);
-			var errorList = _this.checkAll();
-
-			if(!errorList || Y.lang.isEmptyObject(errorList)){
-				return _this.config.onAllCheckPass();		//check pass
-			} else {
-				Y.event.preventDefault();					//no pass
-				return false;
-			}
-		});
+		init.call(this);
 	};
 
 	/**
@@ -252,6 +232,26 @@
 		return false;
 	}
 
+	/**
+	 * 初始化
+	 */
+	var init = function(){
+		var _this = this;
+		this.elements = Y.dom.one(this.config.form).getDomNode().elements;
+		Y.dom.one(this.config.form).on('submit', function(){
+			_this.errors = {};
+			_this.config.resetError(_this.config.form);
+			var errorList = _this.checkAll();
+
+			if(!errorList || Y.lang.isEmptyObject(errorList)){
+				return _this.config.onAllCheckPass();		//check pass
+			} else {
+				Y.event.preventDefault();					//no pass
+				return false;
+			}
+		});
+	};
+	
 	Validator.REGS = REGEXP_COLLECTION;
 	Y.widget.Validator = Validator;
 })(YSL);

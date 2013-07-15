@@ -329,13 +329,6 @@
 				setTimeout(function(){
 					sucCb();
 				}, 0);
-
-				/**
-				if(!s || Y.ua.ie && Y.ua.ie < 10 && ((typeof docMode == 'undefined' || docMode < 10) ? (s.readyState != 'loaded') : (s.readyState != 'complete'))){
-					return;
-				}
-				sucCb();
-				**/
 			});
 			s.src = option.src;
 			(doc.getElementsByTagName('head')[0] || doc.body).appendChild(s);

@@ -59,45 +59,13 @@ YSL.use('widget.Tween', function(Y){
 	};
 
 	/**
-	 * 运行
-	**/
-	Animate.prototype._run = function(){
-		var _this = this;
-		var b, c, d=this.config.step;
-		var _run = function(){
-			if(_this.status == 1){
-				var newStyle = {};
-				var newAttr = {};
-				Y.lang.each(_this.config.to, function(item, key){
-					c = item - _this.config.from[key];
-					var tmp = _this.config.tween(_this._t, _this.config.from[key], c, d);
-					tmp = parseInt(tmp, 10);
-					SUPPORT_STYLE.test(key) ? newStyle[key] = tmp : newAttr[key] = tmp;
-				});
-
-				console.log('newStyle', newStyle, newAttr);
-				_this.target.setStyle(newStyle);
-				_this.target.setAttr(newAttr);
-				if(_this._t++ < d){
-					_this.onRuning(_this._t);
-					_this._timer = setTimeout(_run, _this.config.interval);
-				} else {
-					_this.onFinish();
-					_this.status = 3;
-				}
-			}
-		};
-		_run();
-	};
-
-	/**
 	 * 从初始状态开始
 	**/
 	Animate.prototype.start = function(){
 		this.onStart();
 		this.reset();
 		this.status = 1;
-		this._run();
+		_doRun.call(this);
 	};
 
 	/**
@@ -148,9 +116,41 @@ YSL.use('widget.Tween', function(Y){
 	Animate.prototype.resume = function(){
 		if(this.status == 2){
 			this.status = 1;
-			this._run();
+			_doRun.call(this);
 			this.onResume();
 		}
+	};
+
+	/**
+	 * 运行
+	**/
+	var _doRun = function(){
+		var _this = this;
+		var b, c, d=this.config.step;
+		var _run = function(){
+			if(_this.status == 1){
+				var newStyle = {};
+				var newAttr = {};
+				Y.lang.each(_this.config.to, function(item, key){
+					c = item - _this.config.from[key];
+					var tmp = _this.config.tween(_this._t, _this.config.from[key], c, d);
+					tmp = parseInt(tmp, 10);
+					SUPPORT_STYLE.test(key) ? newStyle[key] = tmp : newAttr[key] = tmp;
+				});
+
+				console.log('newStyle', newStyle, newAttr);
+				_this.target.setStyle(newStyle);
+				_this.target.setAttr(newAttr);
+				if(_this._t++ < d){
+					_this.onRuning(_this._t);
+					_this._timer = setTimeout(_run, _this.config.interval);
+				} else {
+					_this.onFinish();
+					_this.status = 3;
+				}
+			}
+		};
+		_run();
 	};
 
 	Y.widget.Animate = Animate;

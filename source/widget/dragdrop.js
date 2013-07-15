@@ -1,5 +1,9 @@
 (function(Y){
-	var body = Y.dom.one('body');
+	var body;
+
+	var LOCATE_NORMAL = 0,
+		LOCATE_CENTER = 1,
+		LOCATE_PERCENT = 2;
 
 	/**
 	 * 拖拽
@@ -7,10 +11,14 @@
 	 * @param object option 选项
 	 * 		option支持参数：
 	 * 			container: 限定活动容器
+	 * 			locateType: 0: default, 1: center, 2:by percent
 	 * 			lockCenter: 是否锁定移动时，鼠标在目标位置中央
 	 **/
-	var Dragdrop = function(tag, option){
-		this._init(tag, option);
+	var DD = function(tag, option){
+		if(!body){
+			body = = Y.dom.one('body');
+		}
+		_init.call(this, tag, option);
 
 		this.moveAble = false;
 		var _this = this;
@@ -20,28 +28,6 @@
 		var _proxyRegion = {};
 		var _lastRegion = {};
 		var _containerRegion = {};
-
-		var updatePos = function(mouseX, mouseY){
-			var newLeft = mouseX - Math.floor(_proxyRegion.width*_posInfo.leftRate),
-				newTop = mouseY - Math.floor(_proxyRegion.height*_posInfo.topRate);
-
-			//容器限制
-			//这里注意，如果使用的是body的话，body默认高度可能为0
-			if(_this.container){
-				newLeft = Math.max(_containerRegion.left, newLeft);
-				newTop = Math.max(_containerRegion.top, newTop);
-
-				if((_proxyRegion.width + newLeft) > (_containerRegion.left + _containerRegion.width)){
-					newLeft = _containerRegion.left + _containerRegion.width - _proxyRegion.width;
-				}
-
-				if((_proxyRegion.height + newTop) > (_containerRegion.top + _containerRegion.height)){
-					newTop = _containerRegion.top + _containerRegion.height - _proxyRegion.height;
-				}
-			}
-			_this.proxy.setStyle({top:newTop,left:newLeft});
-		};
-
 		body.on('mousedown', function(e){
 			var tag = Y.event.getTarget(e);
 			if(tag.getDomNode() == _this.tag.getDomNode() || _this.tag.contains(tag)){
@@ -60,7 +46,7 @@
 						};
 					}
 
-					updatePos(e.clientX, e.clientY);
+					updatePos.call(_this, e.clientX, e.clientY);
 					_this.onStart(e);
 					Y.event.preventDefault(e);
 				}
@@ -69,7 +55,7 @@
 
 		body.on('mousemove', function(e){
 			if(_this.moveAble && _moving && Y.event.getButton(e) === 0){
-				updatePos(e.clientX, e.clientY);
+				updatePos.call(_this, e.clientX, e.clientY);
 				_this.onMoving(e);
 			}
 		});
@@ -82,7 +68,7 @@
 		});
 	};
 
-	Dragdrop.prototype._init = function(tag, option){
+	var _init = function(tag, option){
 		this.option = Y.object.extend(true, {
 			proxy: this.tag,
 			container: null,
@@ -98,30 +84,56 @@
 		this.container = Y.dom.one(this.option.container);
 	};
 
-	Dragdrop.prototype.onMoving = function(e){};
-	Dragdrop.prototype.onBeforeStart = function(e){};
-	Dragdrop.prototype.onStart = function(e){};
-	Dragdrop.prototype.onStop = function(e){};
-	Dragdrop.prototype.start = function(){this.moveAble = true;};
-	Dragdrop.prototype.stop = function(){this.moveAble = false;};
+	var updatePos = function(mouseX, mouseY){
+		var newLeft = mouseX - Math.floor(_proxyRegion.width*_posInfo.leftRate),
+			newTop = mouseY - Math.floor(_proxyRegion.height*_posInfo.topRate);
+
+		//容器限制
+		//这里注意，如果使用的是body的话，body默认高度可能为0
+		if(this.container){
+			newLeft = Math.max(_containerRegion.left, newLeft);
+			newTop = Math.max(_containerRegion.top, newTop);
+
+			if((_proxyRegion.width + newLeft) > (_containerRegion.left + _containerRegion.width)){
+				newLeft = _containerRegion.left + _containerRegion.width - _proxyRegion.width;
+			}
+
+			if((_proxyRegion.height + newTop) > (_containerRegion.top + _containerRegion.height)){
+				newTop = _containerRegion.top + _containerRegion.height - _proxyRegion.height;
+			}
+		}
+		this.proxy.setStyle({top:newTop,left:newLeft});
+	};
+
+	DD.prototype.onMoving = function(e){};
+	DD.prototype.onBeforeStart = function(e){};
+	DD.prototype.onStart = function(e){};
+	DD.prototype.onStop = function(e){};
+	DD.prototype.start = function(){this.moveAble = true;};
+	DD.prototype.stop = function(){this.moveAble = false;};
 
 	/**
 	 * 单例模式
 	 * @param mix tag
 	 * @param mix object
 	**/
-	Dragdrop.singleton = (function(){
-		var _DRAGDROP_SINGLETON;
+	DD.singleton = (function(){
+		var _DD_SINGLETON;
 		return function(tag, option){
-			if(!_DRAGDROP_SINGLETON){
-				_DRAGDROP_SINGLETON = new Dragdrop(tag, option);
+			if(!_DD_SINGLETON){
+				_DD_SINGLETON = new DD(tag, option);
 			} else {
-				_DRAGDROP_SINGLETON._init(tag, option);
+				_init.call(_DD_SINGLETON, tag, option);
 			}
-			_DRAGDROP_SINGLETON.start();
-			return _DRAGDROP_SINGLETON;
+			_DD_SINGLETON.start();
+			return _DD_SINGLETON;
 		};
 	})();
 
-	Y.widget.Dragdrop = Dragdrop;
+	DD.LOCATE_NORMAL = LOCATE_NORMAL;
+	DD.LOCATE_PERCENT = LOCATE_PERCENT;
+	DD.LOCATE_CENTER = LOCATE_CENTER;
+
+
+	Y.widget.Dragdrop = DD;
 })(YSL);
