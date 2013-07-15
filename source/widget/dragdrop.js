@@ -16,7 +16,7 @@
 	 **/
 	var DD = function(tag, option){
 		if(!body){
-			body = = Y.dom.one('body');
+			body = Y.dom.one('body');
 		}
 		_init.call(this, tag, option);
 
@@ -28,6 +28,28 @@
 		var _proxyRegion = {};
 		var _lastRegion = {};
 		var _containerRegion = {};
+
+		var updatePos = function(mouseX, mouseY){
+			var newLeft = mouseX - Math.floor(_proxyRegion.width*_posInfo.leftRate),
+				newTop = mouseY - Math.floor(_proxyRegion.height*_posInfo.topRate);
+
+			//容器限制
+			//这里注意，如果使用的是body的话，body默认高度可能为0
+			if(this.container){
+				newLeft = Math.max(_containerRegion.left, newLeft);
+				newTop = Math.max(_containerRegion.top, newTop);
+
+				if((_proxyRegion.width + newLeft) > (_containerRegion.left + _containerRegion.width)){
+					newLeft = _containerRegion.left + _containerRegion.width - _proxyRegion.width;
+				}
+
+				if((_proxyRegion.height + newTop) > (_containerRegion.top + _containerRegion.height)){
+					newTop = _containerRegion.top + _containerRegion.height - _proxyRegion.height;
+				}
+			}
+			this.proxy.setStyle({top:newTop,left:newLeft});
+		};
+
 		body.on('mousedown', function(e){
 			var tag = Y.event.getTarget(e);
 			if(tag.getDomNode() == _this.tag.getDomNode() || _this.tag.contains(tag)){
@@ -82,27 +104,6 @@
 			cursor: 'move'
 		});
 		this.container = Y.dom.one(this.option.container);
-	};
-
-	var updatePos = function(mouseX, mouseY){
-		var newLeft = mouseX - Math.floor(_proxyRegion.width*_posInfo.leftRate),
-			newTop = mouseY - Math.floor(_proxyRegion.height*_posInfo.topRate);
-
-		//容器限制
-		//这里注意，如果使用的是body的话，body默认高度可能为0
-		if(this.container){
-			newLeft = Math.max(_containerRegion.left, newLeft);
-			newTop = Math.max(_containerRegion.top, newTop);
-
-			if((_proxyRegion.width + newLeft) > (_containerRegion.left + _containerRegion.width)){
-				newLeft = _containerRegion.left + _containerRegion.width - _proxyRegion.width;
-			}
-
-			if((_proxyRegion.height + newTop) > (_containerRegion.top + _containerRegion.height)){
-				newTop = _containerRegion.top + _containerRegion.height - _proxyRegion.height;
-			}
-		}
-		this.proxy.setStyle({top:newTop,left:newLeft});
 	};
 
 	DD.prototype.onMoving = function(e){};
