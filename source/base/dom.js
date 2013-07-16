@@ -442,6 +442,40 @@
 	};
 
 	/**
+	 * next sibiling
+	 * @param {Bool} includeTextNode
+	 * @return {DOM}
+	 */
+	_DOM.prototype.next = function(includeTextNode){
+		var n = this.getDomNode();
+		while(n.nextSibling){
+			if(!includeTextNode && n.nextSibling.nodeType == 3){
+				n = n.nextSibling;
+			} else {
+				return new _DOM(n.nextSibling);
+			}
+		}
+		return n.nextSibling ? new _DOM(n.nextSibling) : null
+	};
+
+	/**
+	 * previous sibling
+	 * @param {Bool} includeTextNode
+	 * @return {DOM}
+	 */
+	_DOM.prototype.previous = function(includeTextNode) {
+		var n = this.getDomNode();
+		while(n.previousSibling){
+			if(!includeTextNode && n.previousSibling.nodeType == 3){
+				n = n.previousSibling;
+			} else {
+				return new _DOM(n.previousSibling);
+			}
+		}
+		return n.previousSibling ? new _DOM(n.previousSibling) : null
+	};
+
+	/**
 	 * relocation to parent node
 	 * @param mix mix tagName || function
 	 * @return mix

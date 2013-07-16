@@ -105,7 +105,9 @@ _DOM.prototype.toggle=function(){this.getDomNode().style.display=this.getDomNode
 _DOM.prototype.swap=function(tag){var tag=Y.dom.one(tag).getDomNode();if(this.getDomNode().swapNode){this.getDomNode().swapNode(tag);}else{var prt=tag.parentNode,next=tag.nextSibling;if(next==this.getDomNode()){prt.insertBefore(this.getDomNode(),tag);}else if(tag==this.nextSibling){prt.insertBefore(tag,this.getDomNode());}else{this.parentNode.replaceChild(tag,this.getDomNode());prt.insertBefore(this.getDomNode(),next);}}}
 _DOM.prototype.remove=function(keepChild){var n=this.getDomNode(),p=n.parentNode;if(keepChild&&n.hasChildNodes()){while(c=n.firstChild){p.insertBefore(c,n)}}
 p.removeChild(n);this.setDomNode();}
-_DOM.prototype.removeAllChildren=function(){var n=this.getDomNode();while(n.hasChildNodes()){n.removeChild(n.lastChild);}};_DOM.prototype.parent=function(mix){var node=this.getDomNode();if(!node){return null;}
+_DOM.prototype.removeAllChildren=function(){var n=this.getDomNode();while(n.hasChildNodes()){n.removeChild(n.lastChild);}};_DOM.prototype.next=function(includeTextNode){var n=this.getDomNode();while(n.nextSibling){if(!includeTextNode&&n.nextSibling.nodeType==3){n=n.nextSibling;}else{return new _DOM(n.nextSibling);}}
+return n.nextSibling?new _DOM(n.nextSibling):null};_DOM.prototype.previous=function(includeTextNode){var n=this.getDomNode();while(n.previousSibling){if(!includeTextNode&&n.previousSibling.nodeType==3){n=n.previousSibling;}else{return new _DOM(n.previousSibling);}}
+return n.previousSibling?new _DOM(n.previousSibling):null};_DOM.prototype.parent=function(mix){var node=this.getDomNode();if(!node){return null;}
 var fn;if(typeof(mix)=='string'){fn=function(n){return n.getDomNode().tagName.toLowerCase()==mix.toLowerCase();};}else if(mix){fn=mix;}else{return node.parentNode?new _DOM(node.parentNode):null;}
 var result;var p=node.parentNode;if(fn){while(p&&p.parentNode&&p.parentNode.nodeType!=9){if(fn(new _DOM(p))){return new _DOM(p);}
 p=p.parentNode;}}else{return p?new _DOM(p):null;}};_DOM.prototype.getDoc=function(){var n=this.getDomNode();if(!n){return Y.D;}

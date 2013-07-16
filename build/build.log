@@ -5,7 +5,7 @@ processing ...
 >> ../source/base/lang.js     loaded... 5875 byte.
 >> ../source/base/selector.js     loaded... 5526 byte.
 >> ../source/base/event.js     loaded... 8299 byte.
->> ../source/base/dom.js     loaded... 21501 byte.
+>> ../source/base/dom.js     loaded... 22327 byte.
 >> ../source/base/net.js     loaded... 10990 byte.
 >> ../source/base/ua.js     loaded... 1159 byte.
 >> ../source/base/object.js     loaded... 2649 byte.
@@ -13,13 +13,13 @@ processing ...
 
 merge target files...
 
-Write file for release... done.  File length: 64144 byte.
+Write file for release... done.  File length: 64970 byte.
 
 [BASE] builded success ------------------------------------
 
 
 [ALL] project in process  -----------------------------------------
->> ../source/ysl.base.js     loaded... 64144 byte.
+>> ../source/ysl.base.js     loaded... 64970 byte.
 >> ../source/com/cookie.js     loaded... 1187 byte.
 >> ../source/com/date.js     loaded... 2611 byte.
 >> ../source/com/media.js     loaded... 4687 byte.
@@ -40,7 +40,7 @@ merge target files...
 
 min target file...
 
-Write file for release... done.  File length: 81791 byte.
+Write file for release... done.  File length: 82311 byte.
 
 [ALL] builded success ------------------------------------
 
