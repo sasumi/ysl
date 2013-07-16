@@ -39,9 +39,7 @@
 			this.container = null;
 			this.status = 0;
 			this._ios = {};
-			this._constructReady = Y.emptyFn;
-			this._constructed = false;
-			
+			this._readyCbList = [];
 			this.guid = Y.guid();
 			this.onShow = Y.emptyFn;
 			this.onClose = Y.emptyFn;
@@ -82,93 +80,111 @@
 		};
 
 		/**
+		 * on content onReady
+		 * @param  {Function} callback
+		 */
+		Popup.prototype.onReady = function(callback) {
+			if(this._ready){
+				callback();
+			} else {
+				this._readyCbList.push(callback);
+			}
+		};
+
+		/**
+		 * call ready list
+		 */
+		Popup.prototype._callReadyList = function() {
+			this._ready = true;
+			Y.lang.each(this._readyCbList, function(fn){
+				fn();
+			});
+			this._readyCbList = [];
+		};
+
+		/**
 		 * show popup
 		 */
 		Popup.prototype.show = function(){
 			var _this = this;
-			if(!this._constructed){
-				this._constructReady = function(){
-					_this.show();
-				};
-				return;
-			}
 
-			//CREATE MASK
-			if(this.config.showMask){
-				Y.widget.masklayer.show();
-			}
-
-			this.container.show();
-
-			//CACULATE REGION INFO
-			var region = Y.object.extend(true, this.container.getRegion(), this.config);
-				region.minHeight = region.minHeight || 78;
-
-			var scroll = Y.dom.getScroll(),
-				winRegion = Y.dom.getWindowRegion(),
-				top = left = 0;
-
-			if(winRegion.visibleHeight > region.height){
-				top = scroll.top + (winRegion.visibleHeight - region.height)/4;
-			} else if(winRegion.documentHeight > region.height){
-				top = scroll.top;
-			}
-
-			if(winRegion.visibleWidth > region.width){
-				left = winRegion.visibleWidth/2 - region.width/2 - scroll.left;
-			} else if(winRegion.documentWidth > region.width){
-				left = scroll.left;
-			}
-			var calStyle = {left:left,top:top,zIndex:this.config.zIndex};
-			this.container.setStyle(calStyle);
-
-			if(this.config.height){
-				this.container.one('.'+this.config.cssClass.body).setStyle('height', this.config.height);
-			}
-			if(this.config.width){
-				this.container.setStyle('width', this.config.width);
-			}
-
-			this.onShow();
-			this.status = 1;
-
-			bindEvent.call(this);
-			bindMoveEvent.call(this);
-			bindEscCloseEvent.call(this);
-
-			var hasOtherModalPanel = false;
-			var _this = this;
-
-			Y.lang.each(POPUP_COLLECTION, function(dialog){
-				//有其他的模态对话框
-				//调低当前对话框的z-index
-				if(dialog != _this && dialog.status && dialog.config.isModal){
-					_this.config.zIndex = dialog.config.zIndex - 1;
-					hasOtherModalPanel = true;
-					return false;
-				} else if(_this != dialog && dialog.status && !dialog.config.isModal){
-					if(dialog.config.zIndex > _this.config.zIndex){
-						_this.config.zIndex = dialog.config.zIndex + 1;
-					} else if(dialog.config.zIndex == _this.config.zIndex){
-						_this.config.zIndex += 1;
-					}
+			this.onReady(function(){
+				//CREATE MASK
+				if(_this.config.showMask){
+					Y.widget.masklayer.show();
 				}
-			});
 
-			this.container.setStyle('zIndex', this.config.zIndex);
-			if(hasOtherModalPanel){
-				this.setDisable();
-			} else if(_this.config.isModal){
-				//设置除了当前模态对话框的其他对话框所有都为disable
+				_this.container.show();
+
+				//CACULATE REGION INFO
+				var region = Y.object.extend(true, _this.container.getRegion(), _this.config);
+					region.minHeight = region.minHeight || 78;
+
+				var scroll = Y.dom.getScroll(),
+					winRegion = Y.dom.getWindowRegion(),
+					top = left = 0;
+
+				if(winRegion.visibleHeight > region.height){
+					top = scroll.top + (winRegion.visibleHeight - region.height)/4;
+				} else if(winRegion.documentHeight > region.height){
+					top = scroll.top;
+				}
+
+				if(winRegion.visibleWidth > region.width){
+					left = winRegion.visibleWidth/2 - region.width/2 - scroll.left;
+				} else if(winRegion.documentWidth > region.width){
+					left = scroll.left;
+				}
+				var calStyle = {left:left,top:top,zIndex:_this.config.zIndex};
+				_this.container.setStyle(calStyle);
+
+				if(_this.config.height){
+					_this.container.one('.'+_this.config.cssClass.body).setStyle('height', _this.config.height);
+				}
+				if(_this.config.width){
+					_this.container.setStyle('width', _this.config.width);
+				}
+
+				_this.onShow();
+				_this.status = 1;
+
+				bindEvent.call(_this);
+				bindMoveEvent.call(_this);
+				bindEscCloseEvent.call(_this);
+
+				var hasOtherModalPanel = false;
+
 				Y.lang.each(POPUP_COLLECTION, function(dialog){
-					if(dialog != _this && dialog.status){
-						dialog.setDisable();
+					//有其他的模态对话框
+					//调低当前对话框的z-index
+					if(dialog != _this && dialog.status && dialog.config.isModal){
+						_this.config.zIndex = dialog.config.zIndex - 1;
+						hasOtherModalPanel = true;
+						return false;
+					} else if(_this != dialog && dialog.status && !dialog.config.isModal){
+						if(dialog.config.zIndex > _this.config.zIndex){
+							_this.config.zIndex = dialog.config.zIndex + 1;
+						} else if(dialog.config.zIndex == _this.config.zIndex){
+							_this.config.zIndex += 1;
+						}
 					}
 				});
-				this.focus();
-			} else {
-				this.focus();
-			}
+
+				_this.container.setStyle('zIndex', _this.config.zIndex);
+				if(hasOtherModalPanel){
+					_this.setDisable();
+				} else if(_this.config.isModal){
+					//设置除了当前模态对话框的其他对话框所有都为disable
+					Y.lang.each(POPUP_COLLECTION, function(dialog){
+						if(dialog != _this && dialog.status){
+							dialog.setDisable();
+						}
+					});
+					_this.focus();
+				} else {
+					_this.focus();
+				}
+			});
 		};
 
 		/**
@@ -221,6 +237,7 @@
 						tmp.push(dialog);
 					}
 				});
+
 				POPUP_COLLECTION = tmp;
 				_this.container.remove();
 				_this.container = null;
@@ -402,7 +419,8 @@
 
 			//DOM Clone Mode
 			if(!this.container){
-				this.container = Y.dom.create('div').addClass(this.config.cssClass.dialog);
+				this.container = Y.dom.create('div');
+				this.container.addClass(this.config.cssClass.dialog);
 				this.container.setStyle('left', '-9999px');
 			}
 			this.container.getDomNode().id = this.config.ID_PRE + Y.guid();
@@ -458,28 +476,23 @@
 
 						var info = {};
 						if(w.innerWidth){
-							//info.visibleWidth = w.innerWidth;
 							info.visibleHeight = w.innerHeight;
 						} else {
 							var tag = (d.documentElement && d.documentElement.clientWidth) ?
 								d.documentElement : d.body;
-							//info.visibleWidth = tag.clientWidth;
 							info.visibleHeight = tag.clientHeight;
 						}
 						var tag = (d.documentElement && d.documentElement.scrollWidth) ?
 								d.documentElement : d.body;
-						//info.documentWidth = Math.max(tag.scrollWidth, info.visibleWidth);
 						info.documentHeight = Math.max(tag.scrollHeight, info.visibleHeight);
 
-						//this.parentNode.parentNode.style.width = info.documentWidth + 'px';
-						//w.frameElement.style.width = info.documentWidth + 'px';
 						ifr.style.height = info.documentHeight + 'px';
 						_this.container.setStyle('height', 'auto');
 					} else {
 						this.setStyle('height', _this.config.height);
 					}
-					_this._constructed = true;
-					_this._constructReady();
+
+					_this._callReadyList();
 				});
 			} else {
 				//移动ID绑定模式的DOM对象【注意：这里移动之后，原来的元素就被删除了，为了做唯一性，这里只能这么干】
@@ -487,8 +500,7 @@
 					Y.dom.one('#'+this.config.content.id).show();
 					this.container.one('div.'+this.config.cssClass.container).append('#'+this.config.content.id);
 				}
-				_this._constructed = true;
-				this._constructReady();
+				_this._callReadyList();
 			}
 		};
 
@@ -498,6 +510,7 @@
 		var bindEvent = function(){
 			var _this = this;
 			var topCloseBtn = this.container.one('.PopupDialog-close');
+
 			if(topCloseBtn){
 				topCloseBtn.on('click', function(){
 					_this.close();
