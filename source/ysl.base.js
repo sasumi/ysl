@@ -1138,7 +1138,8 @@
 		if(node.styleSheet){
 			node.styleSheet.cssText = rules;
 		} else {
-			 node.appendChild(Y.D.createTextNode(rules));
+			node.innerHTML = '';
+			node.appendChild(Y.D.createTextNode(rules));
 		}
 		return node;
 	};
