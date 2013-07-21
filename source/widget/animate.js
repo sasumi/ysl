@@ -1,5 +1,5 @@
 YSL.use('widget.Tween', function(Y){
-	var SUPPORT_STYLE = /^(left|top|right|bottom|width|height|margin|padding|spacing|backgroundx|backgroundy)$/i;
+	var SUPPORT_STYLE = /^(left|top|right|bottom|width|height|margin|marginTop|marginLeft|marginRight|marginBottom|padding|spacing|backgroundx|backgroundy)$/i;
 	var SUPPORT_ATTR = /^(scrollTop|scrollLeft)$/i;
 	var STEP_FREQ = {
 		'veryslow': 8,
@@ -138,7 +138,6 @@ YSL.use('widget.Tween', function(Y){
 					SUPPORT_STYLE.test(key) ? newStyle[key] = tmp : newAttr[key] = tmp;
 				});
 
-				console.log('newStyle', newStyle, newAttr);
 				_this.target.setStyle(newStyle);
 				_this.target.setAttr(newAttr);
 				if(_this._t++ < d){
