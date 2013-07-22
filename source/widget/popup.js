@@ -1,17 +1,9 @@
 (function(){
-	var _HAS_TOP = (YSL.TOP_FIRST && top.YSL && top !== window);
-	var _WIN = _HAS_TOP ? top : window;
-
-	if(_WIN.YSL.widget.Popup){
-		YSL.widget.Popup = _WIN.YSL.widget.Popup;
-		YSL.lang.each(['getIO', 'addIO', 'getCurrentPopup', 'resizeCurrentPopup'], function(method){
-			YSL.widget.Popup[method] = YSL.object.bind(window, YSL.widget.Popup[method]);
-		});
-		return;
-	}
-
-	YSL.use('widget.masklayer', function(){
-		var Y = _WIN.YSL;
+	/**
+	 * 由于getCurrentPopup对于内嵌的popup没有比较好的适配方案（去除对象引用），
+	 * 因此Popup暂时不提供内嵌dialog无缝接口
+	 */
+	YSL.use('widget.masklayer', function(Y){
 		Y.dom.insertStyleSheet([
 			'.PopupDialog * {margin:0; padding:0}',
 			'.PopupDialog {position:absolute; top:20px; left:20px; width:350px; border:1px solid #999; border-top-color:#bbb; border-left-color:#bbb; background-color:white; box-shadow:0 0 10px #535658; border-radius:4px}',
@@ -314,57 +306,6 @@
 		};
 
 		/**
-		 * 获取当前popup IO
-		 * @param {String} key
-		 * @param {Function} callback
-		 */
-		Popup.getIO = function(key, callback){
-			var pop = Popup.getCurrentPopup();
-			if(pop){
-				pop.getIO(key, callback);
-			}
-		};
-
-		/**
-		 * 为当前popup添加一个IO
-		 * @param {String} key
-		 * @param {Mix} param
-		 * @return {Boolean}
-		 */
-		Popup.addIO = function(){
-			var pop = Popup.getCurrentPopup();
-			if(pop){
-				return pop.addIO(key, callback);
-			}
-			return false;
-		};
-
-		/**
-		 * close all popup
-		 * @see Popup#close
-		 */
-		Popup.closeAll = function(){
-			Y.lang.each(POPUP_COLLECTION, function(pop){
-				pop.close();
-			});
-		};
-
-		/**
-		 * resize current popup
-		 * @deprecated only take effect in iframe mode
-		 */
-		Popup.resizeCurrentPopup = function(){
-			if(!Y.W.frameElement){
-				return;
-			}
-			Y.dom.one(Y.W).on('load', function(){
-				var wr = Y.dom.getWindowRegion();
-				Y.D.body.style.overflow = 'hidden';
-				Y.W.frameElement.style.height = wr.documentHeight +'px';
-			});
-		};
-
-		/**
 		 * search popup by guid
 		 * @param  {String} guid
 		 * @return {Popup}
@@ -380,34 +321,80 @@
 			return result;
 		};
 
-		/**
-		 * get current page located popup object
-		 * @param  {Dom} win
-		 * @return {Mix}
-		 */
-		Popup.getCurrentPopup = function(win){
-			if(!this || !this.frameElement){
-				return;
-			}
+		//!!以下方法仅在iframe里面提供
+		if(Y.W.frameElement){
+			/**
+			 * 获取当前popup IO
+			 * @param {String} key
+			 * @param {Function} callback
+			 */
+			Popup.getIO = function(key, callback){
+				var pop = Popup.getCurrentPopup();
+				if(pop){
+					pop.getIO(key, callback);
+				}
+			};
 
-			var guid = this.frameElement.getAttribute('guid');
-			if(guid){
-				var pop = parent.YSL.widget.Popup.getPopupByGuid(guid);
-				return pop;
-			}
-			return null;
-		};
+			/**
+			 * 为当前popup添加一个IO
+			 * @param {String} key
+			 * @param {Mix} param
+			 * @return {Boolean}
+			 */
+			Popup.addIO = function(){
+				var pop = Popup.getCurrentPopup();
+				if(pop){
+					return pop.addIO(key, callback);
+				}
+				return false;
+			};
 
-		/**
-		 * close current popup
-		 * @deprecated only take effect in iframe mode
-		 */
-		Popup.closeCurrentPopup = function(){
-			var curPop = this.getCurrentPopup();
-			if(curPop){
-				curPop.close();
-			}
-		};
+			/**
+			 * close all popup
+			 * @see Popup#close
+			 */
+			Popup.closeAll = function(){
+				Y.lang.each(POPUP_COLLECTION, function(pop){
+					pop.close();
+				});
+			};
+
+			/**
+			 * resize current popup
+			 * @deprecated only take effect in iframe mode
+			 */
+			Popup.resizeCurrentPopup = function(){
+				Y.dom.one(Y.W).on('load', function(){
+					var wr = Y.dom.getWindowRegion();
+					Y.D.body.style.overflow = 'hidden';
+					Y.W.frameElement.style.height = wr.documentHeight +'px';
+				});
+			};
+
+			/**
+			 * get current page located popup object
+			 * @param  {Dom} win
+			 * @return {Mix}
+			 */
+			Popup.getCurrentPopup = function(win){
+				var guid = Y.W.frameElement.getAttribute('guid');
+				if(guid){
+					return parent.YSL.widget.Popup.getPopupByGuid(guid);
+				}
+				return null;
+			};
+
+			/**
+			 * close current popup
+			 * @deprecated only take effect in iframe mode
+			 */
+			Popup.closeCurrentPopup = function(){
+				var curPop = this.getCurrentPopup();
+				if(curPop){
+					curPop.close();
+				}
+			};
+		}
 
 		/**
 		 * contruct popup structure
@@ -633,11 +620,6 @@
 				});
 			}
 		})();
-
-		if(_HAS_TOP){
-			YSL.widget.Popup = _WIN.YSL.widget.Popup = Popup;
-		} else {
-			YSL.widget.Popup = Popup;
-		}
+		YSL.widget.Popup = Popup;
 	});
 })();
