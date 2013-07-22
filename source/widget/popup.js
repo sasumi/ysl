@@ -322,8 +322,6 @@
 			var pop = Popup.getCurrentPopup();
 			if(pop){
 				pop.getIO(key, callback);
-			} else {
-				callback(null);
 			}
 		};
 

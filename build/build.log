@@ -23,13 +23,13 @@ Write file for release... done.  File length: 64994 byte.
 >> ../source/com/cookie.js     loaded... 1187 byte.
 >> ../source/com/date.js     loaded... 2611 byte.
 >> ../source/com/media.js     loaded... 4687 byte.
->> ../source/widget/animate.js     loaded... 3572 byte.
+>> ../source/widget/animate.js     loaded... 3569 byte.
 >> ../source/widget/datepicker.js     loaded... 11945 byte.
 >> ../source/widget/drogdrop.js     loaded... 0 byte.
 >> ../source/widget/helper.js     loaded... 1199 byte.
 >> ../source/widget/pageslide.js     loaded... 3129 byte.
 >> ../source/widget/pagination.js     loaded... 3165 byte.
->> ../source/widget/popup.js     loaded... 17915 byte.
+>> ../source/widget/popup.js     loaded... 17881 byte.
 >> ../source/widget/slide.js     loaded... 1371 byte.
 >> ../source/widget/tab.js     loaded... 572 byte.
 >> ../source/widget/tip.js     loaded... 1857 byte.
@@ -40,7 +40,7 @@ merge target files...
 
 min target file...
 
-Write file for release... done.  File length: 82462 byte.
+Write file for release... done.  File length: 82446 byte.
 
 [ALL] builded success ------------------------------------
 
