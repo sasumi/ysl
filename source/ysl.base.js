@@ -2146,7 +2146,7 @@
 		option = Y.object.extend(true, {url:url, data:data}, option || {});
 		option.method = 'get';
 		var ajax = new Y.net.Ajax(option);
-		ajax.onResponse = callback;
+		ajax.onResult = callback;
 		ajax.send();
 	};
 
@@ -2162,7 +2162,7 @@
 		option = Y.object.extend(true, {url:url, data:data}, option || {});
 		option.method = 'post';
 		var ajax = new Y.net.Ajax(option);
-		ajax.onResponse = callback;
+		ajax.onResult = callback;
 		ajax.send();
 	};
 
