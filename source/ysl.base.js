@@ -2143,7 +2143,7 @@
 	**/
 	Y.net.get = function(url, data, callback, option){
 		callback = callback || Y.emptyFn;
-		option = Y.object.extend(true, {url:url}, option || {});
+		option = Y.object.extend(true, {url:url, data:data}, option || {});
 		option.method = 'get';
 		var ajax = new Y.net.Ajax(option);
 		ajax.onResponse = callback;
@@ -2159,7 +2159,7 @@
 	 **/
 	Y.net.post = function(url, data, callback, option){
 		callback = callback || Y.emptyFn;
-		option = Y.object.extend(true, {url:url}, option || {});
+		option = Y.object.extend(true, {url:url, data:data}, option || {});
 		option.method = 'post';
 		var ajax = new Y.net.Ajax(option);
 		ajax.onResponse = callback;

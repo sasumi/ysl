@@ -1,5 +1,5 @@
 YSL.use('widget.Tween', function(Y){
-	var SUPPORT_STYLE = /^(left|top|right|bottom|width|height|margin|marginTop|marginLeft|marginRight|marginBottom|padding|spacing|backgroundx|backgroundy)$/i;
+	var SUPPORT_STYLE = /^(opacity|left|top|right|bottom|width|height|margin|marginTop|marginLeft|marginRight|marginBottom|padding|spacing|backgroundx|backgroundy)$/i;
 	var SUPPORT_ATTR = /^(scrollTop|scrollLeft)$/i;
 	var STEP_FREQ = {
 		'veryslow': 8,
@@ -49,7 +49,8 @@ YSL.use('widget.Tween', function(Y){
 			var _s = SUPPORT_STYLE.test(key),
 				_a = SUPPORT_ATTR.test(key);
 			if(_s || _a){
-				_this.config.from[key] = parseInt(_this.target[_s ? 'getStyle' : 'getAttr'](key), 10);
+				var v = _this.target[_s ? 'getStyle' : 'getAttr'](key);
+				_this.config.from[key] = parseInt(v, 10) || 0;
 				if(!_this.config.step){
 					var f = Math.abs(Math.ceil((_this.config.to[key] - _this.config.from[key])/_this.config.interval));
 					_this.config.step = Math.ceil(f*STEP_FREQ[_this.config.speed]);
