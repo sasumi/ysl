@@ -340,6 +340,7 @@
 		 * @param  {Function} callback
 		 */
 		var loadScript = function(arg1, callback){
+			callback = callback || Y.emptyFn;
 			var list = [];
 			if(typeof(arg1) == 'string'){
 				list.push({src:arg1});
