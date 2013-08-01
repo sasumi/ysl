@@ -2186,6 +2186,131 @@
 	};
 
 	/**
+	 * 表单提交组件
+	 * 使用方法：
+	 * var fp = new FormPoster($('form'));
+	 * fp.send();
+	 */
+	Y.net.FormPoster = (function(){
+		var _guid_count = 1;
+		var _guid = function() {
+			return '_form_poster_' + (_guid_count++);
+		};
+		var _extend = function(tag, src) {
+			src = src || {};
+			var ret = tag;
+			for (var i in src) {
+				ret[i] = src[i];
+			}
+			return ret;
+		};
+		var each = function(obj, fn) {
+			for (var i in obj) {
+				fn(obj[i]);
+			}
+		};
+		var addEvent = function(obj, event, fn) {
+			if (obj.addEventListener) {
+				obj.addEventListener(event, fn, false);
+			} else {
+				obj.attachEvent('on' + event, fn);
+			}
+		};
+		var _FP = function(form, option) {
+			var _this = this;
+			this._called = false;
+			this.option = _extend({
+				callbackMethod: 'callback',
+				timeout: 30000
+			}, option);
+			var sid = form.getAttribute('data-fp-id');
+			if (!sid) {
+				sid = 'data-fp-' + _guid();
+				form.setAttribute('data-fp-id', sid);
+				form.target = sid;
+			}
+			var iframe = document.getElementById(sid);
+			if (!iframe) {
+				var div = document.createElement('div');
+				div.style.cssText = 'display:none';
+				div.innerHTML = '<iframe id="' + sid + '" name="' + sid + '" frameborder="0"></iframe>';
+				iframe = div.firstChild;
+				iframe[this.option.callbackMethod] = function() {
+					_this._called = true;
+					if (!_this.option.timeout || _this._timer) {
+						_this.onResponse.apply(_this, arguments);
+					}
+				};
+				iframe.onload = function() {
+					if (!_this.option.timeout || _this._timer) {
+						setTimeout(function() {
+							if (!_this._called) {
+								_this.onError('response error');
+							}
+							_this.resetState();
+							_this.onComplete();
+						}, 0);
+					}
+				};
+				document.body.appendChild(div);
+				addEvent(form, 'submit', function() {
+					if (_this.option.timeout) {
+						_this._timer = setTimeout(function() {
+							_this.onTimeout();
+							_this.resetState();
+						}, _this.option.timeout);
+					}
+				});
+			}
+			this.form = form;
+			this.iframe = iframe;
+			this._timer = null;
+		};
+		_FP.prototype.addParam = function(name, value) {
+			var input = document.createElement('input');
+			input.type = 'hidden';
+			input.name = name;
+			input.value = value;
+			this.form.appendChild(input);
+		};
+		_FP.prototype.setParam = function(name, value) {
+			var found = false;
+			each(this.form.elements, function(el) {
+				if (el && el[name] == name) {
+					el.value = value;
+					found = true;
+				}
+			});
+			if (!found) {
+				this.addParam(name, value);
+			}
+			return found;
+		};
+		_FP.prototype.delParam = function(name) {
+			var found = false;
+			each(this.form.elements, function(el) {
+				if (el && el.name == name) {
+					el.parentNode.removeChild(el);
+					found = true;
+				}
+			});
+			return found;
+		};
+		_FP.prototype.onResponse = function(data) {};
+		_FP.prototype.onComplete = function() {};
+		_FP.prototype.onError = function(msg, code, responseData) {};
+		_FP.prototype.onTimeout = function() {
+			_this.onError('timeout');
+		};
+		_FP.prototype.resetState = function() {
+			clearTimeout(this._timer);
+			this._timer = 0;
+			this._called = false;
+		};
+		return _FP;
+	})();
+
+	/**
 	 * 加载脚本
 	 **/
 	(function(net){
@@ -2427,49 +2552,51 @@
 
 (function(Y){
 	/**
-	 * ua info
-	 * ua.ie || ua.opera || ua.safari || ua.firefox || ua.chrome
-	 * ua.ver
-	 * @return {mix}
-	 */
-	var uas = Y.W.navigator.userAgent.toLowerCase();	//useragent full string
-	var b = {
-		ie: !!Y.W.ActiveXObject,
-		opera: !!Y.W.opera && Y.W.opera.version,
-		webkit: uas.indexOf(' applewebkit/')> -1,
-		air: uas.indexOf(' adobeair/')>-1,
-		quirks: Y.D.compatMode == 'BackCompat',
-		safari: /webkit/.test(uas) && !/chrome/.test(uas),
-		firefox: /firefox/.test(uas),
-		chrome: /chrome/.test(uas),
-		userAgent: uas
+	 * 浏览器ua判断
+	 **/
+	var uas = navigator.userAgent;
+
+	var ua = {
+		opera: window.opera && opera.buildNumber,
+		webkit: /WebKit/.test(uas),
+		ie: Boolean(window.ActiveXObject),
+		ie9Mode: false,					//是否为IE9软件
+		docMode: document.documentMode,	//文档模式
+		gecko: /WebKit/.test(uas) && /Gecko/.test(uas),
+		firefox: (document.getBoxObjectFor || typeof(window.mozInnerScreenX) != 'undefined') ? parseFloat((/(?:Firefox|GranParadiso|Iceweasel|Minefield).(\d+\.\d+)/i.exec(uas) || r.exec('Firefox/3.3'))[1], 10) : null,
+		mac: uas.indexOf('Mac') != -1,
+		chrome: false,
+		air: /adobeair/i.test(uas),
+		safari: false,
+		isiPod: uas.indexOf('iPod') > -1,
+		isiPhone: uas.indexOf('iPhone') > -1,
+		isiPad: uas.indexOf('iPad') > -1
 	};
 
-	var k = '';
-	for (var i in b) {
-		if(b[i]){ k = 'safari' == i ? 'version' : i; break; }
-	}
-	b.ver = k && RegExp("(?:" + k + ")[\\/: ]([\\d.]+)").test(uas) ? RegExp.$1 : "0";
-	b.ver = b.ie ? parseInt(b.ver,10) : b.ver;
-
-	//IE兼容模式检测
-	if(b.ie){
-		b.ie8Compat = Y.D.documentMode == 8;
-		b.ie7Compat = (b.ie == 7 && !Y.D.documentMode) || Y.D.documentMode == 7;
-		b.ie6Compat = b.ie < 7 && b.quirks;
+	if(typeof(navigator.taintEnabled) == 'undefined') {
+	    m = /AppleWebKit.(\d+\.\d+)/i.exec(uas);
+	    ua.webkit = m ? parseFloat(m[1], 10) : (document.evaluate ? (document.querySelector ? 525 : 420) : 419);
+	    if ((m = /Chrome.(\d+\.\d+)/i.exec(uas)) || window.chrome) {
+	        ua.chrome = m ? parseFloat(m[1], 10) : '2.0';
+	    } else if ((m = /Version.(\d+\.\d+)/i.exec(uas)) || window.safariHandler) {
+	        ua.safari = m ? parseFloat(m[1], 10) : '3.3';
+	    }
 	}
 
-	if(b.ie && b.ver == 9){
-		b.ver = Y.D.addEventListener ? 9 : 8;
-	}
-	if(b.ie){
-		b['ie'+b.ver] = true;
-	}
-	b.isIE = function(v){
-		return b.ie == v;
-	};
+	if(ua.ie){
+		ua.ie = 6;
 
-	Y.ua = b;
+		(window.XMLHttpRequest || (uas.indexOf('MSIE 7.0') > -1)) && (ua.ie = 7);
+		(window.XDomainRequest || (uas.indexOf('Trident/4.0') > -1)) && (ua.ie = 8);
+		(uas.indexOf('Trident/5.0') > -1) && (ua.ie = 9);
+		(uas.indexOf('Trident/6.0') > -1) && (ua.ie = 10);
+		ua.ie9Mode = (9 - ((uas.indexOf('Trident/5.0') > -1) ? 0 : 1) - (window.XDomainRequest ? 0 : 1) - (window.XMLHttpRequest ? 0 : 1)) == 9;
+		if(ua.ie == 9){
+			ua.ie = document.addEventListener ? 9 : 8;	//防止虚假IE9（指的是文档模型为8）
+		}
+	}
+
+	Y.ua = ua;
 })(YSL);
 (function(Y){
 	var PROTOTYPE_FIELDS = [

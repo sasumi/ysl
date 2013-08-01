@@ -341,7 +341,7 @@
 			 * @param {Mix} param
 			 * @return {Boolean}
 			 */
-			Popup.addIO = function(){
+			Popup.addIO = function(key, callback){
 				var pop = Popup.getCurrentPopup();
 				if(pop){
 					return pop.addIO(key, callback);
@@ -504,10 +504,11 @@
 
 			this.container.all('a.PopupDialog-btn').each(function(btn, i){
 				btn.on('click', function(){
-					if(_this.config.buttons[i].handler){
-						_this.config.buttons[i].handler.apply(this, arguments);
+					var hd = _this.config.buttons[i].handler || function(){_this.close();};
+					if(typeof(hd) == 'string'){
+						_this.getIO(hd, function(fn){fn();});
 					} else {
-						_this.close();
+						hd.apply(this, arguments);
 					}
 				});
 			});
