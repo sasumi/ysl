@@ -6,12 +6,12 @@
 	YSL.use('widget.masklayer', function(Y){
 		Y.dom.insertStyleSheet([
 			'.PopupDialog * {margin:0; padding:0}',
-			'.PopupDialog {position:absolute; top:20px; left:20px; width:350px; border:1px solid #999; border-top-color:#bbb; border-left-color:#bbb; background-color:white; box-shadow:0 0 10px #535658; border-radius:4px}',
-			'.PopupDialog-hd {height:28px; background-color:#eee; cursor:move; position:relative; border-bottom:1px solid #ddd; border-radius:4px 4px 0 0}',
+			'.PopupDialog {position:absolute; top:20px; left:20px; width:350px; border:1px solid #999; border-top-color:#bbb; border-left-color:#bbb; background-color:white; box-shadow:0 0 8px #aaa; border-radius:3px}',
+			'.PopupDialog-hd {height:28px; background-color:white; cursor:move; position:relative; border-radius:3px 3px 0 0}',
 			'.PopupDialog-hd h3 {font-size:12px; font-weight:bolder; color:gray; padding-left:10px; line-height:28px;}',
 			'.PopupDialog-close {display:block; overflow:hidden; width:28px; height:28px; position:absolute; right:0; top:0; text-align:center; cursor:pointer; font-size:17px; font-family:Verdana; text-decoration:none; color:gray;}',
 			'.PopupDialog-close:hover {color:black;}',
-			'.PopupDialog-ft {background-color:#f3f3f3; white-space:nowrap; border-top:1px solid #e0e0e0; padding:5px 5px 5px 0; text-align:right; border-radius:0 0 4px 4px}',
+			'.PopupDialog-ft {background-color:#f3f3f3; white-space:nowrap; border-top:1px solid #e0e0e0; padding:5px 5px 5px 0; text-align:right; border-radius:0 0 3px 3px}',
 			'.PopupDialog-text {padding:20px;}',
 			'.PopupDialog-bd-frm {border:none; width:100%}',
 			'.PopupDialog-btn {display:inline-block; font-size:12px; cursor:pointer; box-shadow:1px 1px #fff; text-shadow: 1px 1px 0 rgba(255, 255, 255, 0.7); background:-moz-linear-gradient(19% 75% 90deg, #E0E0E0, #FAFAFA); background:-webkit-gradient(linear, left top, left bottom, from(#FAFAFA), to(#E0E0E0)); color:#4A4A4A; background-color:white; text-decoration:none; padding:0 15px; height:20px; line-height:20px; text-align:center; border:1px solid #ccd4dc; white-space:nowrap; border-radius:2px}',
@@ -302,7 +302,9 @@
 		 * @param {Function} callback
 		 */
 		Popup.prototype.getIO = function(key, callback){
-			callback(this._ios[key]);
+			if(this._ios[key]){
+				callback(this._ios[key]);
+			}
 		};
 
 		/**

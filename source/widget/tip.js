@@ -1,5 +1,19 @@
 (function(Y){
 	var TIP_CONTAINER = null;
+	var RES_URL = Y.ENV.getAbsUrl()+'res/';
+
+	Y.dom.insertStyleSheet([
+		'.ysl-tip-container-wrap {width:100%; text-align:center; left:0; position:fixed; top:46%; z-index: 65533; _position:absolute;}',
+		'.ysl-tip-container {display:inline-block; height:54px; line-height:54px; color:#606060; font-weight:bold; font-size: 14px; background:url("'+RES_URL+'tip_layer.png") no-repeat 100% -271px; padding-right:13px;}',
+		'.ysl-tip-icon-tip,',
+		'.ysl-tip-icon-succ,',
+		'.ysl-tip-icon-load,',
+		'.ysl-tip-icon-err {background:url("'+RES_URL+'tip_layer.png") no-repeat -6px -109px; float:left; display:inline-block; height:54px; width:45px; margin:0 0 0 -45px; _margin:0 -4px 0 0;}',
+		'.ysl-tip-icon-succ {background-position:-6px -55px;}',
+		'.ysl-tip-icon-err {background-position:-6px -163px}',
+		'.ysl-tip-icon-load {background-position:-6px -1px}',
+		'.ysl-tip-icon-load i {display:block; width:100%; height:100%; display:block; background:url("'+RES_URL+'loading.gif") no-repeat 50% 50%}',
+		'.ysl-tip-content {float: left; height:54px; line-height:54px; background:url("'+RES_URL+'tip_layer.png") repeat-x 100% -217px; padding:0 18px 0 9px}'].join(''));
 
 	/**
 	 * Show Tips
@@ -47,7 +61,7 @@
 		}
 		var html = ([
 			'<span class="ysl-tip-container">',
-				'<span class="ysl-tip-icon-',this.config.type,'"></span>',
+				'<span class="ysl-tip-icon-',this.config.type,'"><i></i></span>',
 				'<span class="ysl-tip-content">',this.config.msg,'</span>',
 			'</div>'
 		]).join('');
