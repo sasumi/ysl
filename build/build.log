@@ -29,10 +29,10 @@ Write file for release... done.  File length: 68955 byte.
 >> ../source/widget/helper.js     loaded... 1199 byte.
 >> ../source/widget/pageslide.js     loaded... 3129 byte.
 >> ../source/widget/pagination.js     loaded... 3165 byte.
->> ../source/widget/popup.js     loaded... 17480 byte.
+>> ../source/widget/popup.js     loaded... 17554 byte.
 >> ../source/widget/slide.js     loaded... 1371 byte.
 >> ../source/widget/tab.js     loaded... 572 byte.
->> ../source/widget/tip.js     loaded... 1857 byte.
+>> ../source/widget/tip.js     loaded... 3034 byte.
 >> ../source/widget/tween.js     loaded... 5669 byte.
 >> ../source/widget/validator.js     loaded... 6406 byte.
 
@@ -40,7 +40,7 @@ merge target files...
 
 min target file...
 
-Write file for release... done.  File length: 84985 byte.
+Write file for release... done.  File length: 86156 byte.
 
 [ALL] builded success ------------------------------------
 

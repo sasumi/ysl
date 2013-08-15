@@ -7,7 +7,7 @@
 		Y.dom.insertStyleSheet([
 			'.PopupDialog * {margin:0; padding:0}',
 			'.PopupDialog {position:absolute; top:20px; left:20px; width:350px; border:1px solid #999; border-top-color:#bbb; border-left-color:#bbb; background-color:white; box-shadow:0 0 8px #aaa; border-radius:3px}',
-			'.PopupDialog-hd {height:28px; background-color:white; cursor:move; position:relative; border-radius:3px 3px 0 0}',
+			'.PopupDialog-hd {height:28px; background-color:#F7F7F7; cursor:move; position:relative; border-radius:3px 3px 0 0}',
 			'.PopupDialog-hd h3 {font-size:12px; font-weight:bolder; color:gray; padding-left:10px; line-height:28px;}',
 			'.PopupDialog-close {display:block; overflow:hidden; width:28px; height:28px; position:absolute; right:0; top:0; text-align:center; cursor:pointer; font-size:17px; font-family:Verdana; text-decoration:none; color:gray;}',
 			'.PopupDialog-close:hover {color:black;}',
