@@ -7,7 +7,7 @@
 		Y.dom.insertStyleSheet([
 			'.PopupDialog * {margin:0; padding:0}',
 			'.PopupDialog {position:absolute; top:20px; left:20px; width:350px; border:1px solid #999; border-top-color:#bbb; border-left-color:#bbb; background-color:white; box-shadow:0 0 8px #aaa; border-radius:3px}',
-			'.PopupDialog-hd {height:28px; background-color:#F7F7F7; cursor:move; position:relative; border-radius:3px 3px 0 0}',
+			'.PopupDialog-hd {height:28px; background-color:#fff; cursor:move; position:relative; border-radius:3px 3px 0 0}',
 			'.PopupDialog-hd h3 {font-size:12px; font-weight:bolder; color:gray; padding-left:10px; line-height:28px;}',
 			'.PopupDialog-close {display:block; overflow:hidden; width:28px; height:28px; position:absolute; right:0; top:0; text-align:center; cursor:pointer; font-size:17px; font-family:Verdana; text-decoration:none; color:gray;}',
 			'.PopupDialog-close:hover {color:black;}',
@@ -399,7 +399,7 @@
 		}
 
 		/**
-		 * contruct popup structure
+		 * 初始化对话框结构
 		 */
 		var init = function(){
 			var _this = this;
@@ -492,7 +492,7 @@
 		};
 
 		/**
-		 * bind popup event
+		 * 绑定对话框按钮事件
 		 */
 		var bindEvent = function(){
 			var _this = this;
@@ -549,7 +549,7 @@
 		}
 
 		/**
-		 * bind popup moving event
+		 * 绑定对话框移动事件
 		 */
 		var bindMoveEvent = function(){
 			if(!this.config.moveEnable){
@@ -573,7 +573,7 @@
 			});
 
 			Y.event.add(Y.D, 'mousedown', function(e){
-				if(!_this.container){
+				if(!_this.container || Y.event.getButton(e) !== 0){
 					return;
 				}
 				var head = _this.config.moveTriggerByContainer ? _this.container : _this.container.one('.'+_this.config.cssClass.head);
@@ -592,7 +592,8 @@
 		};
 
 		/**
-		 * bind ESC close event
+		 * 绑定 ESC 关闭事件
+		 * 注意，所有的对话框只绑定一次ESC事件
 		 */
 		var bindEscCloseEvent = (function(){
 			var ESC_BINDED;
@@ -602,7 +603,6 @@
 				}
 				ESC_BINDED = true;
 
-				var _this = this;
 				Y.event.add(Y.D, 'keyup', function(e){
 					if(e.keyCode == Y.event.KEYS.ESC){
 						var lastDialog = null;
