@@ -1,6 +1,0 @@
-.vegroupRight_toolbar {float:right;}
-a.veSidebarImage {background:url("../img/icon_insert_pic.png") no-repeat 4px 3px;}
-a.veSidebarImage_over,
-.veSidebarImage_active a.veSidebarImage {background:url("../img/icon_insert_pic.png") no-repeat 4px 3px #e2e5ea;}
-.veSidebarImage_active a.veSidebarImage,
-.veSidebarImage_active a.veSidebarImage_over { border:1px solid #ccc; border-bottom:none}

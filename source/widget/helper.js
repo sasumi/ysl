@@ -21,7 +21,7 @@
 			el = Y.dom.one(el);
 			var phTxt = el.getAttr('placeholder');
 			if(!phTxt){
-				throw 'need placeholder attr';
+				throw('need placeholder attr');
 				return;
 			}
 
