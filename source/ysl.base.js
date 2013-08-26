@@ -1574,6 +1574,38 @@
 	};
 
 	/**
+	 * 克隆节点
+	 * @param {Boolean} includeChildren 是否包含子节点
+	 * @return {DOM}
+	 */
+	_DOM.prototype.clone = function(includeChildren){
+		var n = this.getDomNode();
+		return new _DOM(n.cloneNode(includeChildren));
+	};
+
+	/**
+	 * last child
+	 * @return {DOM}
+	 */
+	_DOM.prototype.last = function(includeTextNode){
+		var n = this.getDomNode();
+		var l = n.childNodes.length;
+		if(!l){
+			return null;
+		}
+		if(includeTextNode){
+			return new _DOM(n.childNodes[l-1]);
+		}
+
+		for(var i=l-1; i>=0; i--){
+			if(n.childNodes[i].nodeType == 1){
+				return new _DOM(n.childNodes[i]);
+			}
+		}
+		return null;
+	};
+
+	/**
 	 * relocation to parent node
 	 * @param mix mix tagName || function
 	 * @return mix
@@ -1760,6 +1792,31 @@
 	}
 
 	/**
+	 * 将当前节点插入到指定节点前面
+	 * @param  {DOM} tag
+	 */
+	_DOM.prototype.insertBefore = function(tag) {
+		tag = Y.dom.one(tag);
+		var n = this.getDomNode();
+		return tag.parent().getDomNode().insertBefore(n, tag.getDomNode());
+	};
+
+	/**
+	 * 将当前节点插入到指定节点后面
+	 * @param  {DOM} tag
+	 */
+	_DOM.prototype.insertAfter = function(tag) {
+		var n = this.getDomNode();
+		tag = Y.dom.one(tag);
+		var ns = tag.getDomNode().nextSibling;
+		if(ns){
+			this.insertBefore(ns);
+		} else {
+			tag.parent().append(this);
+		}
+	};
+
+	/**
 	 * batch append children
 	 * @param DOM n
 	 */
@@ -1865,7 +1922,6 @@
 		var result = Y.querySelectorAll(selector, context, cond);
 		return new _DOMCollection(result);
 	};
-
 
 	/**
 	 * extend event method

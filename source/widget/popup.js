@@ -323,6 +323,55 @@
 			return result;
 		};
 
+		/**
+		 * 显示确认对话框
+		 * @param  {String} title
+		 * @param  {String|Object} content
+		 * @param  {Function} onConfirm
+		 * @param  {Function} onCancel
+		 * @param  {Object} config
+		 * @return {Object}
+		 */
+		Popup.showConfirm = function(title, content, onConfirm, onCancel, config){
+			var conf = Y.object.extend(true, {
+				title: title||'确认',
+				content: content,
+				width: 350,
+				topCloseBtn: false,
+				buttons: [
+					{name:'确定', handler:(onConfirm || null), setDefault:true},
+					{name:'取消', handler:(onCancel || null)}
+				]
+			}, config);
+
+			var pop = new Popup(conf);
+			pop.show();
+			return pop;
+		}
+
+		/**
+		 * 显示对话框
+		 * @param  {String} title
+		 * @param  {String|Object} content
+		 * @param  {Function} onSubmit
+		 * @param  {Object} config
+		 * @return {Object}
+		 */
+		Popup.showAlert = function(title, content, onSubmit, config){
+			var conf = Y.object.extend(true, {
+				title: title||'提示',
+				content: content,
+				width: 350,
+				topCloseBtn: false,
+				buttons: [
+					{name:'确定', handler:(onSubmit || null), setDefault:true}
+				]
+			}, config);
+			var pop = new Popup(conf);
+			pop.show();
+			return pop;
+		};
+
 		//!!以下方法仅在iframe里面提供
 		if(Y.W.frameElement){
 			/**

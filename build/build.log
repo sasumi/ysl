@@ -5,7 +5,7 @@ processing ...
 >> ../source/base/lang.js     loaded... 5875 byte.
 >> ../source/base/selector.js     loaded... 5526 byte.
 >> ../source/base/event.js     loaded... 8299 byte.
->> ../source/base/dom.js     loaded... 22351 byte.
+>> ../source/base/dom.js     loaded... 23509 byte.
 >> ../source/base/net.js     loaded... 14306 byte.
 >> ../source/base/ua.js     loaded... 1804 byte.
 >> ../source/base/object.js     loaded... 2649 byte.
@@ -13,23 +13,23 @@ processing ...
 
 merge target files...
 
-Write file for release... done.  File length: 68955 byte.
+Write file for release... done.  File length: 70113 byte.
 
 [BASE] builded success ------------------------------------
 
 
 [ALL] project in process  -----------------------------------------
->> ../source/ysl.base.js     loaded... 68955 byte.
+>> ../source/ysl.base.js     loaded... 70113 byte.
 >> ../source/com/cookie.js     loaded... 1187 byte.
 >> ../source/com/date.js     loaded... 2611 byte.
 >> ../source/com/media.js     loaded... 4687 byte.
 >> ../source/widget/animate.js     loaded... 3598 byte.
 >> ../source/widget/datepicker.js     loaded... 11945 byte.
 >> ../source/widget/drogdrop.js     loaded... 0 byte.
->> ../source/widget/helper.js     loaded... 1199 byte.
+>> ../source/widget/helper.js     loaded... 1200 byte.
 >> ../source/widget/pageslide.js     loaded... 3129 byte.
 >> ../source/widget/pagination.js     loaded... 3165 byte.
->> ../source/widget/popup.js     loaded... 17554 byte.
+>> ../source/widget/popup.js     loaded... 17540 byte.
 >> ../source/widget/slide.js     loaded... 1371 byte.
 >> ../source/widget/tab.js     loaded... 572 byte.
 >> ../source/widget/tip.js     loaded... 3034 byte.
@@ -40,7 +40,7 @@ merge target files...
 
 min target file...
 
-Write file for release... done.  File length: 86156 byte.
+Write file for release... done.  File length: 86904 byte.
 
 [ALL] builded success ------------------------------------
 

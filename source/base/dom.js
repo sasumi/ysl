@@ -477,6 +477,16 @@
 	};
 
 	/**
+	 * 克隆节点
+	 * @param {Boolean} includeChildren 是否包含子节点
+	 * @return {DOM}
+	 */
+	_DOM.prototype.clone = function(includeChildren){
+		var n = this.getDomNode();
+		return new _DOM(n.cloneNode(includeChildren));
+	};
+
+	/**
 	 * last child
 	 * @return {DOM}
 	 */
@@ -492,7 +502,7 @@
 
 		for(var i=l-1; i>=0; i--){
 			if(n.childNodes[i].nodeType == 1){
-				return n.childNodes[i];
+				return new _DOM(n.childNodes[i]);
 			}
 		}
 		return null;
@@ -689,8 +699,9 @@
 	 * @param  {DOM} tag
 	 */
 	_DOM.prototype.insertBefore = function(tag) {
+		tag = Y.dom.one(tag);
 		var n = this.getDomNode();
-		return this.parent().insertBefore(n, Y.dom.one(tag).getDomNode());
+		return tag.parent().getDomNode().insertBefore(n, tag.getDomNode());
 	};
 
 	/**
