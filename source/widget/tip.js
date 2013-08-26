@@ -93,6 +93,11 @@
 		}
 	}
 
+	Tip.show = function(arg1, wtype, time){
+		var tip = new Tip(arg1, wtype, time);
+		return tip;
+	};
+
 	/**
 	 * destory tip container
 	 */
